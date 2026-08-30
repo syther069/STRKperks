@@ -59,7 +59,7 @@ export function RecipientReceipt({ receipt, onClose }: RecipientReceiptProps) {
           +{formatSTRK(receipt.rewardAmount)} {receipt.tokenSymbol}
         </div>
         <p className="text-xs text-brand-privacy font-medium">
-          Privately allocated to recipient shielded balance
+          Commitment recorded; private-note allocation is adapter-pending
         </p>
       </div>
 

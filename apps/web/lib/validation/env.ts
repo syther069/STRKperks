@@ -7,6 +7,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_CAMPAIGN_FACTORY_ADDRESS: z.string().regex(/^0x[0-9a-f]+$/i).optional(),
   NEXT_PUBLIC_NULLIFIER_REGISTRY_ADDRESS: z.string().regex(/^0x[0-9a-f]+$/i).optional(),
   NEXT_PUBLIC_REWARD_ROUTER_ADDRESS: z.string().regex(/^0x[0-9a-f]+$/i).optional(),
+  NEXT_PUBLIC_REWARD_CAMPAIGN_ADDRESS: z.string().regex(/^0x[0-9a-f]+$/i).optional(),
   NEXT_PUBLIC_STRK20_TOKEN_ADDRESS: z.string().regex(/^0x[0-9a-f]+$/i).optional(),
 });
 

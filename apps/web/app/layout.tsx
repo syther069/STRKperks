@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 export const metadata: Metadata = {
   title: "StrkPerks | Starknet-Native Private Rewards & Referral Settlement",
   description:
-    "Confidential reward and referral distribution protocol on Starknet using STRK20 shielded balance flows and campaign-scoped nullifier replay protection.",
+    "Starknet reward and referral campaigns with onchain STRK funding, campaign-scoped nullifier replay protection, and a documented STRK20 adapter boundary.",
 };
 
 export default function RootLayout({

@@ -20,11 +20,11 @@ export function Footer() {
                 StrkPerks
               </span>
               <span className="text-[10px] font-mono text-brand-reward px-1.5 py-0.2 rounded bg-brand-reward-subtle border border-brand-reward/30">
-                STRK20 Private Settlement
+                STRK20 Integration Boundary
               </span>
             </div>
             <p className="text-fg-secondary text-xs max-w-md leading-relaxed">
-              Confidential rewards, referral settlements, and contributor incentives on Starknet. Powered by STRK20 shielded balance flows and campaign-scoped replay protection via NullifierRegistry.cairo.
+              Rewards, referral settlements, and contributor incentives on Starknet. Campaign-scoped replay protection is live; STRK20 private settlement remains adapter-pending.
             </p>
           </div>
 

@@ -24,7 +24,7 @@ export default function DemoPage() {
           StrkPerks Interactive Protocol Walkthrough
         </h1>
         <p className="text-xs sm:text-sm text-fg-secondary max-w-3xl leading-relaxed">
-          This interactive test surface lets hackathon judges step through the intended rewards lifecycle on Starknet: campaign deployment, STRK20 adapter funding, private settlement, and Cairo nullifier replay-attack blocking. Simulated steps are labeled in the UI until live contract addresses and STRK20 resources are configured.
+          This interactive test surface lets hackathon judges step through the intended rewards lifecycle: campaign deployment, simulated STRK20 adapter funding, simulated private settlement, and Cairo nullifier replay-attack blocking. Live contract actions are available on the campaign pages; adapter steps remain clearly labeled as simulated.
         </p>
       </div>
 

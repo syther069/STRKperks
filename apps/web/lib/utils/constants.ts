@@ -1,6 +1,6 @@
 export const APP_CONFIG = {
   name: "StrkPerks",
-  tagline: "Starknet-Native Private Rewards & Referral Settlement via STRK20",
+  tagline: "Starknet-Native Rewards & Referral Settlement with a STRK20 Privacy Boundary",
   network: process.env.NEXT_PUBLIC_STARKNET_NETWORK || "sepolia",
   rpcUrl:
     process.env.NEXT_PUBLIC_STARKNET_RPC_URL ||
@@ -17,6 +17,7 @@ export const CONTRACT_ADDRESSES = {
   campaignFactory: process.env.NEXT_PUBLIC_CAMPAIGN_FACTORY_ADDRESS || "",
   nullifierRegistry: process.env.NEXT_PUBLIC_NULLIFIER_REGISTRY_ADDRESS || "",
   rewardRouter: process.env.NEXT_PUBLIC_REWARD_ROUTER_ADDRESS || "",
+  rewardCampaign: process.env.NEXT_PUBLIC_REWARD_CAMPAIGN_ADDRESS || "",
   strkToken: process.env.NEXT_PUBLIC_STRK20_TOKEN_ADDRESS || "",
 };
 

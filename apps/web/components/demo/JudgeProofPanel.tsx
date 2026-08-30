@@ -113,7 +113,7 @@ export function JudgeProofPanel() {
             <h3 className="text-base font-bold text-fg-primary">
               {demoStep === 1 && "Connect Starknet Account"}
               {demoStep === 2 && "Deploy Private Campaign on Starknet"}
-              {demoStep === 3 && "Fund Campaign via STRK20 Shielded Balance"}
+              {demoStep === 3 && "Fund Campaign (STRK20 Adapter Simulation)"}
               {demoStep === 4 && "Approve Conversion with Commitment"}
               {demoStep === 5 && "Execute Confidential Reward Claim"}
               {demoStep === 6 && "Demonstrate Replay Attack Blocking"}

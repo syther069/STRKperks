@@ -21,7 +21,7 @@ export default function DocsPage() {
       name: "RewardCampaign.cairo",
       role: "Campaign Logic",
       desc: "Stores campaign rules, manages token budgets, and validates conversion approvals and expiry.",
-      address: "0x03810a9f4c829e102874ab62019487fa92305819ad74e928",
+      address: CONTRACT_ADDRESSES.rewardCampaign,
     },
     {
       name: "NullifierRegistry.cairo",
@@ -49,7 +49,7 @@ export default function DocsPage() {
           StrkPerks Architecture & Privacy Specifications
         </h1>
         <p className="text-sm text-fg-secondary leading-relaxed">
-          How StrkPerks leverages Cairo smart contracts on Starknet and STRK20 confidential primitives to provide verifiable, non-custodial, private rewards settlement.
+          How StrkPerks leverages Cairo smart contracts on Starknet, with a documented boundary for future STRK20 private settlement.
         </p>
       </div>
 
@@ -112,9 +112,9 @@ export default function DocsPage() {
             <div className="flex items-start gap-3 p-3 rounded bg-bg-raised">
               <span className="px-2 py-0.5 rounded bg-brand-primary text-fg-primary font-bold">2</span>
               <div>
-                <strong className="text-fg-primary font-sans">STRK20 Shielded Funding:</strong>
+                <strong className="text-fg-primary font-sans">Onchain STRK Funding:</strong>
                 <p className="text-fg-secondary text-[11px] mt-0.5">
-                  Owner deposits STRK into the confidential treasury, creating a shielded liquidity pool dedicated to the campaign.
+                  Owner approves and deposits STRK into the deployed campaign contract. Private-note funding remains pending the verified STRK20 adapter.
                 </p>
               </div>
             </div>
