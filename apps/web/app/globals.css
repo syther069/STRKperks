@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', sans-serif;
+  --font-jetbrains: 'JetBrains Mono', monospace;
+  --font-space: 'Space Grotesk', sans-serif;
+
+  /* Obsidian Citrus Design Tokens */
+  --bg-app: #090A0A;
+  --surface: #111313;
+  --surface-raised: #181B1B;
+  --surface-subtle: #141716;
+  --border: #2A2F2E;
+  --border-hover: #3E4543;
+  --border-focus: #FF5A1F;
+  --primary: #FF5A1F;
+  --primary-hover: #E84C14;
+  --reward-accent: #B7FF5A;
+  --privacy-accent: #3CE7C7;
+  --text-primary: #F4F1EA;
+  --text-secondary: #A7ADA8;
+  --text-muted: #6F7772;
+  --success: #7CFF8A;
+  --warning: #FFD166;
+  --error: #FF5C5C;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* Custom Scrollbar for protocol dashboard density */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* Smooth transitions */
+* {
+  border-color: var(--border);
+}

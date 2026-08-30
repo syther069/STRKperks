@@ -1,0 +1,25 @@
+# Local secrets and environment overrides
+**/.env.local
+**/.env.*.local
+!.env.example
+
+# Dependencies and generated build output
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+dist/
+coverage/
+
+# TypeScript and tooling caches
+**/*.tsbuildinfo
+.cache/
+**/.cache/
+
+# Local Starknet/account material
+**/.starknet_accounts/
+**/.snfoundry_cache/
+**/deployment_output*.log
+**/deploy_only*.log
+**/sncast_*.log

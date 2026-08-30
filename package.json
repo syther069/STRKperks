@@ -1,0 +1,19 @@
+{
+  "name": "strkperks",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix apps/web run dev",
+    "build": "npm --prefix apps/web run build",
+    "start": "npm --prefix apps/web run start",
+    "lint": "npm --prefix apps/web run lint",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit --incremental false -p apps/web/tsconfig.json",
+    "test": "node node_modules/tsx/dist/cli.cjs apps/web/tests/nullifier.test.ts"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "devDependencies": {
+    "tsx": "^4.23.12"
+  }
+}
