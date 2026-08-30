@@ -1,10 +1,11 @@
 import { deriveNullifier, deriveRecipientCommitment, toFelt } from "../lib/campaign/nullifier";
 import { generatePrivateRewardNote } from "../lib/strk20/notes";
+import { detectStrk20WalletApi } from "../lib/strk20/capabilities";
 import { campaignFormSchema } from "../lib/validation/campaignSchema";
 import { parseTokenAmount } from "../lib/starknet/amounts";
 
 // Simple standalone assertion test suite that can be run directly via node / tsx or vitest
-function runTests() {
+async function runTests() {
   console.log("Starting StrkPerks Protocol Tests...\n");
 
   // Test 1: Deterministic Nullifier Generation
@@ -83,7 +84,13 @@ function runTests() {
   }
   console.log("✓ Test 7 Passed: Conversion ID felt encoding verified.");
 
-  console.log("\nAll 7 StrkPerks Protocol Checks Passed Successfully!");
+  const capability = await detectStrk20WalletApi({ supportedWalletApi: async () => ["0.10.3"] });
+  if (!capability.supported) throw new Error("FAIL: STRK20 capability detection rejected supported wallet");
+  const unsupported = await detectStrk20WalletApi({});
+  if (unsupported.supported) throw new Error("FAIL: STRK20 capability detection accepted unsupported wallet");
+  console.log("✓ Test 8 Passed: STRK20 Wallet API capability detection verified.");
+
+  console.log("\nAll 8 StrkPerks Protocol Checks Passed Successfully!");
 }
 
 runTests();

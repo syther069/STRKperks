@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAccount, useConnect, useDisconnect, useNetwork } from "@starknet-react/core";
 import { useDemoStore } from "../../lib/store/demoStore";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { shortenAddress, formatSTRK } from "../../lib/utils/format";
 import { Wallet, LogOut, ChevronDown, Check, Shield, Layers } from "lucide-react";
+import { detectStrk20WalletApi, Strk20Capability } from "../../lib/strk20/capabilities";
 
 export function WalletButton() {
-  const { address, isConnected } = useAccount();
+  const { address, account, isConnected } = useAccount();
   const { chain } = useNetwork();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
@@ -24,6 +25,19 @@ export function WalletButton() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [strk20Capability, setStrk20Capability] = useState<Strk20Capability | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!isConnected || !account) {
+      setStrk20Capability(null);
+      return () => { active = false; };
+    }
+    detectStrk20WalletApi(account).then((capability) => {
+      if (active) setStrk20Capability(capability);
+    });
+    return () => { active = false; };
+  }, [account, isConnected]);
 
   // Active address determination
   const activeAddress = isConnected
@@ -83,6 +97,15 @@ export function WalletButton() {
                       </span>
                     </div>
                   </div>
+
+                  {isConnected && (
+                    <div className="mb-2 rounded border border-border px-2.5 py-2 text-[11px]">
+                      <div className="text-fg-muted uppercase tracking-wider font-semibold text-[10px]">STRK20 Wallet API</div>
+                      <div className={strk20Capability?.supported ? "text-status-success" : "text-fg-muted"}>
+                        {strk20Capability?.supported ? "Supported" : "Not detected"}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-1">
                     <button

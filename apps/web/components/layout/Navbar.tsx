@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { WalletButton } from "../wallet/WalletButton";
+import { useAccount } from "@starknet-react/core";
 import { useDemoStore } from "../../lib/store/demoStore";
 import {
   Shield,
@@ -20,6 +21,7 @@ import {
 export function Navbar() {
   const pathname = usePathname();
   const { isDemoMode, toggleDemoMode } = useDemoStore();
+  const { isConnected } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -85,14 +87,14 @@ export function Navbar() {
           <button
             onClick={() => toggleDemoMode()}
             className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono border transition-colors cursor-pointer ${
-              isDemoMode
+              isDemoMode && !isConnected
                 ? "bg-brand-privacy-subtle text-brand-privacy border-brand-privacy/40"
                 : "bg-bg-raised text-fg-muted border-border"
             }`}
             title="Toggle Live/Demo Sandbox Mode"
           >
             <Lock className="w-3 h-3" />
-            <span>{isDemoMode ? "Demo Mode" : "Live Starknet"}</span>
+            <span>{isConnected ? "Live Wallet" : isDemoMode ? "Demo Mode" : "Live Starknet"}</span>
           </button>
 
           <WalletButton />
