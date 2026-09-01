@@ -1,7 +1,5 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -20,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${GeistSans.variable} ${GeistMono.variable} bg-bg text-fg-primary antialiased flex min-h-dvh flex-col`}
+        className="font-sans bg-bg text-fg-primary antialiased flex min-h-dvh flex-col"
       >
         <WalletProvider>
           <Navbar />

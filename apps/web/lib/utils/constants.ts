@@ -34,6 +34,6 @@ export const LIVE_CONTRACTS_ENABLED =
 
 export const LIVE_CONTRACTS_CONFIGURED = LIVE_CONTRACTS_ENABLED;
 
-export const DEMO_CAMPAIGN_ID = "camp_starknet_ambassador_2026";
+export const DEMO_CAMPAIGN_ID = "camp_demo_1";
 export const DEMO_RECIPIENT_SECRET = "priv_rcpt_sec_99481ad7f309a";
-export const DEMO_CONVERSION_ID = "conv_ambassador_referral_771";
+export const DEMO_CONVERSION_ID = "conv_demo_referral_771";
