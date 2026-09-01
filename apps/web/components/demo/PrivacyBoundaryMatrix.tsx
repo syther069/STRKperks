@@ -7,19 +7,19 @@ export function PrivacyBoundaryMatrix() {
   const protectedItems = [
     {
       title: "Recipient Wallet Address",
-      desc: "The live contract records a recipient commitment; private-note settlement requires the verified STRK20 adapter.",
+      desc: "The STRK20 open note hides its owner; app calldata does not contain the recipient wallet address.",
     },
     {
       title: "Merchant-to-Recipient Graph",
-      desc: "The commitment/nullifier path reduces direct linkage, but the current live ERC20 flow does not provide full graph privacy.",
+      desc: "The private-note payout reduces direct wallet linkage, subject to amount and timing correlation.",
     },
     {
       title: "Cumulative Recipient Payouts",
-      desc: "Campaign-scoped nullifiers avoid exposing recipient secrets; payout privacy depends on the pending STRK20 adapter.",
+      desc: "Ownership history is wallet-discoverable and selectively disclosable, not published as an account balance.",
     },
     {
       title: "Private Note Balance & Spending",
-      desc: "A private viewing-key note is not created by the current live flow; this behavior is demo-only until the adapter is connected.",
+      desc: "The wallet owns note discovery and viewing keys; the app never requests those keys.",
     },
   ];
 
@@ -46,7 +46,7 @@ export function PrivacyBoundaryMatrix() {
             StrkPerks Privacy Boundary Model
           </h3>
           <p className="text-xs text-fg-secondary">
-            Verifiable transparency where integrity matters; complete confidentiality where identities leak.
+            Privacy properties and public metadata for the reviewed design; network proof is still required.
           </p>
         </div>
         <PrivacyBadge type="shielded" />
@@ -57,7 +57,7 @@ export function PrivacyBoundaryMatrix() {
         <div className="p-4 rounded-card bg-brand-privacy-subtle/30 border border-brand-privacy/30 space-y-4">
           <div className="flex items-center gap-2 text-brand-privacy font-semibold text-sm">
             <EyeOff className="w-4 h-4 shrink-0" />
-            <span>Privacy Boundary (Adapter Pending)</span>
+            <span>Hidden by STRK20 note ownership</span>
           </div>
 
           <div className="space-y-3">

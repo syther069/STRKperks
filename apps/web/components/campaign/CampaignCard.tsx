@@ -2,26 +2,34 @@
 
 import React from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { Campaign } from "../../lib/types";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { StatusBadge, PrivacyBadge } from "../ui/Badge";
-import { formatSTRK, formatDate, shortenAddress } from "../../lib/utils/format";
-import { ArrowUpRight, ShieldCheck, UserCheck, Lock, ExternalLink } from "lucide-react";
+import { formatSTRK, formatDate } from "../../lib/utils/format";
+import { ArrowUpRight, Lock } from "lucide-react";
 
 export interface CampaignCardProps {
   campaign: Campaign;
+  featured?: boolean;
 }
 
-export function CampaignCard({ campaign }: CampaignCardProps) {
+export function CampaignCard({ campaign, featured = false }: CampaignCardProps) {
+  const prefersReducedMotion = useReducedMotion();
   const percentClaimed = Math.min(
     100,
     Math.round((campaign.settledClaims / (campaign.maxClaims || 1)) * 100)
   );
 
   return (
-    <Card className="hover:border-border-hover transition-all flex flex-col justify-between h-full group">
-      <div className="space-y-4">
+    <motion.article
+      className="group h-full"
+      whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+      transition={{ type: "spring", stiffness: 360, damping: 28, mass: 0.72 }}
+    >
+      <Card className="flex h-full flex-col justify-between border-white/[0.075] bg-bg-surface/90 transition-[border-color,background-color,box-shadow] duration-200 group-hover:border-border-hover group-hover:bg-bg-surface group-hover:shadow-card-hover motion-reduce:transition-none">
+      <div className={featured ? "space-y-6" : "space-y-4"}>
         {/* Top Badges & Title */}
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
@@ -30,10 +38,18 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           </div>
 
           <div>
-            <h3 className="text-base font-semibold text-fg-primary group-hover:text-brand-primary transition-colors line-clamp-1">
+            <h3
+              className={`font-semibold tracking-tight text-fg-primary transition-colors group-hover:text-brand-primary motion-reduce:transition-none ${
+                featured ? "text-xl sm:text-2xl" : "line-clamp-1 text-base"
+              }`}
+            >
               {campaign.name}
             </h3>
-            <p className="text-xs text-fg-secondary mt-1 line-clamp-2 leading-relaxed">
+            <p
+              className={`mt-1 text-xs leading-relaxed text-fg-secondary ${
+                featured ? "max-w-xl sm:text-sm" : "line-clamp-2"
+              }`}
+            >
               {campaign.description}
             </p>
           </div>
@@ -45,7 +61,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             <span className="text-[11px] text-fg-muted uppercase tracking-wider block">
               Reward / Conversion
             </span>
-            <span className="text-sm font-bold font-mono text-brand-reward mt-0.5 block">
+            <span className="mt-0.5 block font-mono text-sm font-semibold tabular-nums text-brand-reward">
               {formatSTRK(campaign.rewardAmount)} {campaign.tokenSymbol}
             </span>
           </div>
@@ -53,7 +69,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             <span className="text-[11px] text-fg-muted uppercase tracking-wider block">
               Remaining Budget
             </span>
-            <span className="text-sm font-bold font-mono text-fg-primary mt-0.5 block">
+            <span className="mt-0.5 block font-mono text-sm font-semibold tabular-nums text-fg-primary">
               {formatSTRK(campaign.remainingBudget)} {campaign.tokenSymbol}
             </span>
           </div>
@@ -67,17 +83,19 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           </div>
           <div className="w-full h-1.5 bg-bg-subtle rounded-full overflow-hidden border border-border/50">
             <div
-              className="h-full bg-gradient-to-r from-brand-primary to-brand-reward transition-all duration-300 rounded-full"
+              className="h-full rounded-full bg-brand-primary shadow-[0_0_12px_rgba(255,90,31,0.28)] transition-[width] duration-300 motion-reduce:transition-none"
               style={{ width: `${percentClaimed}%` }}
             />
           </div>
         </div>
 
         {/* Technical Metadata Monospace */}
-        <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] font-mono text-fg-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2 font-mono text-[11px] text-fg-muted">
           <div className="flex items-center gap-1">
-            <Lock className="w-3 h-3 text-brand-privacy" />
-            <span className="truncate max-w-[120px]">{campaign.nullifierNamespace}</span>
+            <Lock className="size-3 text-brand-privacy" aria-hidden="true" />
+            <span className={featured ? "break-all" : "max-w-[120px] truncate"}>
+              {campaign.nullifierNamespace}
+            </span>
           </div>
           <span>Expires {formatDate(campaign.endTime)}</span>
         </div>
@@ -95,12 +113,13 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             variant="privacy"
             size="sm"
             className="w-full text-xs"
-            rightIcon={<ArrowUpRight className="w-3.5 h-3.5" />}
+            rightIcon={<ArrowUpRight className="size-3.5" aria-hidden="true" />}
           >
             Claim Link
           </Button>
         </Link>
       </div>
-    </Card>
+      </Card>
+    </motion.article>
   );
 }

@@ -27,3 +27,19 @@ fn test_factory_creates_and_retrieves_campaigns() {
     assert(factory.get_campaign(0) == c1, 'campaign 0 matches');
     assert(factory.get_campaign(1) == c2, 'campaign 1 matches');
 }
+
+#[test]
+#[should_panic(expected: 'INVALID_CAMPAIGN')]
+fn test_factory_rejects_zero_campaign() {
+    let factory = deploy_factory();
+    factory.create_campaign(0x0.try_into().unwrap());
+}
+
+#[test]
+#[should_panic(expected: 'CAMPAIGN_ALREADY_REGISTERED')]
+fn test_factory_rejects_duplicate_campaign() {
+    let factory = deploy_factory();
+    let campaign: ContractAddress = 0xAAAA.try_into().unwrap();
+    factory.create_campaign(campaign);
+    factory.create_campaign(campaign);
+}

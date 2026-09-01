@@ -24,7 +24,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-fg-secondary text-xs max-w-md leading-relaxed">
-              Rewards, referral settlements, and contributor incentives on Starknet. Campaign-scoped replay protection is live; STRK20 private settlement remains adapter-pending.
+              Starknet rewards with campaign-scoped replay protection and an unaudited STRK20 private-note payout adapter.
             </p>
           </div>
 

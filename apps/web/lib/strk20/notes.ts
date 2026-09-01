@@ -1,6 +1,4 @@
-/**
- * Represents a private reward note settled via STRK20.
- */
+/** Demo fixture only. Live STRK20 notes are created and discovered by the wallet. */
 export interface PrivateRewardNote {
   noteHash: string;
   amountSTRK: string;
@@ -8,7 +6,6 @@ export interface PrivateRewardNote {
   campaignId: string;
   settledAt: number;
   isSpent: boolean;
-  viewingKeyProof: string;
 }
 
 export function generatePrivateRewardNote(
@@ -32,6 +29,5 @@ export function generatePrivateRewardNote(
     campaignId,
     settledAt: Math.floor(Date.now() / 1000),
     isSpent: false,
-    viewingKeyProof: `vk_proof_strk20_${hex.slice(0, 8)}`,
   };
 }

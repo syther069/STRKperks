@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { formatSTRK, formatDate, shortenAddress } from "@/lib/utils/format";
 import { getExplorerContractUrl } from "@/lib/starknet/explorer";
 import { ChevronLeft, ArrowUpRight, Lock, ExternalLink, ShieldCheck, UserCheck } from "lucide-react";
+import { CONTRACT_ADDRESSES, LIVE_CONTRACTS_ENABLED } from "@/lib/utils/constants";
 
 export default function CampaignDetailPage() {
   const params = useParams();
@@ -36,6 +37,9 @@ export default function CampaignDetailPage() {
     100,
     Math.round((campaign.settledClaims / (campaign.maxClaims || 1)) * 100)
   );
+  const displayedCampaignAddress = LIVE_CONTRACTS_ENABLED
+    ? CONTRACT_ADDRESSES.rewardCampaign
+    : campaign.contractAddress;
 
   return (
     <div className="space-y-8">
@@ -129,16 +133,16 @@ export default function CampaignDetailPage() {
               <span className="text-fg-muted font-sans">Owner Address:</span>
               <span className="text-fg-secondary">{shortenAddress(campaign.ownerAddress, 4)}</span>
             </div>
-            {campaign.contractAddress && (
+            {displayedCampaignAddress && (
               <div className="flex justify-between">
                 <span className="text-fg-muted font-sans">Contract on L2:</span>
                 <a
-                  href={getExplorerContractUrl(campaign.contractAddress)}
+                  href={getExplorerContractUrl(displayedCampaignAddress)}
                   target="_blank"
                   rel="noreferrer"
                   className="text-brand-privacy hover:underline inline-flex items-center gap-1"
                 >
-                  {shortenAddress(campaign.contractAddress, 3)}
+                  {shortenAddress(displayedCampaignAddress, 3)}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>

@@ -24,10 +24,6 @@ export function buildFactoryCreateCall(campaignAddress: string): Call {
   };
 }
 
-export function buildFundCall(campaignAddress: string, amount: string): Call {
-  return { contractAddress: campaignAddress, entrypoint: "fund", calldata: [amount] };
-}
-
 export function buildErc20FundCall(campaignAddress: string, amount: string): Call {
   return { contractAddress: campaignAddress, entrypoint: "fund_with_erc20", calldata: [amount] };
 }
@@ -41,18 +37,27 @@ export function buildErc20ApproveCall(spenderAddress: string, amount: string): C
   };
 }
 
-export function buildApproveConversionCall(campaignAddress: string, conversionId: string): Call {
-  return { contractAddress: campaignAddress, entrypoint: "approve_conversion", calldata: [toFelt(conversionId)] };
-}
-
-export function buildClaimCall(campaignAddress: string, registryAddress: string, routerAddress: string, conversionId: string, nullifier: string, recipientCommitment: string, noteId: string, amount: string): Call {
+export function buildApproveClaimCall(
+  campaignAddress: string,
+  conversionId: string,
+  nullifier: string,
+  noteId: string,
+  authorizationExpiry: string,
+): Call {
   return {
     contractAddress: campaignAddress,
-    entrypoint: "claim_reward",
-    calldata: [requireAddress(registryAddress, "NullifierRegistry"), requireAddress(routerAddress, "RewardRouter"), toFelt(conversionId), nullifier, recipientCommitment, noteId, amount],
+    entrypoint: "approve_claim",
+    calldata: [toFelt(conversionId), nullifier, noteId, authorizationExpiry],
   };
 }
 
-export function buildPrivateSettlementCall(routerAddress: string, campaignAddress: string, recipientCommitment: string, amount: string, noteId: string): Call {
-  return { contractAddress: requireAddress(routerAddress, "RewardRouter"), entrypoint: "settle_private_reward", calldata: [campaignAddress, recipientCommitment, amount, noteId] };
+export function buildConfigureAnonymizerCall(
+  campaignAddress: string,
+  anonymizerAddress: string,
+): Call {
+  return {
+    contractAddress: campaignAddress,
+    entrypoint: "configure_anonymizer",
+    calldata: [requireAddress(anonymizerAddress, "Reward anonymizer")],
+  };
 }

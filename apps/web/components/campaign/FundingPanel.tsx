@@ -12,7 +12,7 @@ import { getExplorerTxUrl } from "../../lib/starknet/explorer";
 import { ShieldCheck, ArrowDownCircle, ExternalLink, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useContractActions } from "../../lib/starknet/useContractActions";
-import { LIVE_CONTRACTS_ENABLED } from "../../lib/utils/constants";
+import { CONTRACT_ADDRESSES, LIVE_CONTRACTS_ENABLED } from "../../lib/utils/constants";
 
 export interface FundingPanelProps {
   campaign: Campaign;
@@ -37,9 +37,9 @@ export function FundingPanel({ campaign }: FundingPanelProps) {
     setIsFunding(true);
     try {
       const res = LIVE_CONTRACTS_ENABLED
-        ? campaign.contractAddress
-          ? { txHash: await live.fundCampaign(campaign.contractAddress, amount) }
-          : (() => { throw new Error("Campaign contract address is not configured"); })()
+        ? CONTRACT_ADDRESSES.rewardCampaign
+          ? { txHash: await live.fundCampaign(CONTRACT_ADDRESSES.rewardCampaign, amount) }
+          : (() => { throw new Error("Configured live campaign address is missing"); })()
         : await fundCampaign(campaign.id, amount);
       setSuccessTx(res.txHash);
       confetti({
@@ -64,10 +64,10 @@ export function FundingPanel({ campaign }: FundingPanelProps) {
           </div>
           <div>
             <h4 className="text-sm font-semibold text-fg-primary">
-              {LIVE_CONTRACTS_ENABLED ? "STRK Treasury Funding" : "STRK20 Shielded Treasury Deposit (Demo)"}
+              {LIVE_CONTRACTS_ENABLED ? "STRK Treasury Funding" : "Public Treasury Funding (Demo)"}
             </h4>
             <p className="text-[11px] text-fg-secondary">
-              {LIVE_CONTRACTS_ENABLED ? "Fund the deployed campaign budget onchain." : "Fund the simulated private reward pool."}
+              {LIVE_CONTRACTS_ENABLED ? "Fund the deployed campaign budget onchain." : "Simulate the public ERC-20 funding leg."}
             </p>
           </div>
         </div>
@@ -97,7 +97,7 @@ export function FundingPanel({ campaign }: FundingPanelProps) {
         <div className="p-3 rounded bg-status-success/15 border border-status-success/30 space-y-2">
           <div className="flex items-center gap-2 text-xs font-medium text-status-success">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>{LIVE_CONTRACTS_ENABLED ? "Funding transaction accepted on Starknet L2! Campaign budget updated onchain." : "Deposit accepted in demo mode. Shielded balance simulation updated."}</span>
+            <span>{LIVE_CONTRACTS_ENABLED ? "Funding transaction accepted on Starknet L2! Campaign budget updated onchain." : "Demo funding recorded locally; no network transaction occurred."}</span>
           </div>
           <div className="flex items-center justify-between font-mono text-[11px] text-fg-secondary pt-1">
             <span>Tx: {shortenHash(successTx, 8)}</span>

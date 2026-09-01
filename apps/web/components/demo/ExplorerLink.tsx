@@ -11,6 +11,7 @@ export interface ExplorerLinkProps {
 }
 
 export function ExplorerLink({ type, value, label, className }: ExplorerLinkProps) {
+  if (!value) return null;
   const url = type === "tx" ? getExplorerTxUrl(value) : getExplorerContractUrl(value);
   const display = label || (type === "tx" ? shortenHash(value, 6) : shortenAddress(value, 4));
 

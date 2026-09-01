@@ -11,6 +11,7 @@ import {
   voyager,
 } from "@starknet-react/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Strk20WalletProvider } from "./Strk20WalletProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,7 +36,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       explorer={voyager}
       autoConnect
     >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <Strk20WalletProvider>{children}</Strk20WalletProvider>
+      </QueryClientProvider>
     </StarknetConfig>
   );
 }

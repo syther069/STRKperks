@@ -42,18 +42,25 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "Inter", "sans-serif"],
-        mono: ["var(--font-jetbrains)", "JetBrains Mono", "monospace"],
-        display: ["var(--font-space)", "Space Grotesk", "sans-serif"],
+        sans: ["var(--font-geist-sans)", "Geist", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "Geist Mono", "monospace"],
+        display: ["var(--font-geist-sans)", "Geist", "sans-serif"],
       },
       borderRadius: {
         card: "8px",
         btn: "6px",
       },
       boxShadow: {
-        glow: "0 0 20px -5px rgba(255, 90, 31, 0.15)",
-        "glow-reward": "0 0 20px -5px rgba(183, 255, 90, 0.15)",
-        "glow-privacy": "0 0 20px -5px rgba(60, 231, 199, 0.15)",
+        glow:
+          "inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 5px rgba(68,22,7,0.46), 0 14px 32px -16px rgba(255,90,31,0.52)",
+        "glow-reward":
+          "inset 0 1px 0 rgba(255,255,255,0.16), 0 2px 5px rgba(20,38,7,0.5), 0 14px 32px -16px rgba(183,255,90,0.42)",
+        "glow-privacy":
+          "inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 5px rgba(5,35,31,0.54), 0 14px 32px -16px rgba(60,231,199,0.4)",
+        panel:
+          "inset 0 1px 0 rgba(255,255,255,0.055), inset 0 -1px 0 rgba(0,0,0,0.38), 0 3px 10px rgba(0,0,0,0.2), 0 26px 70px -38px rgba(255,90,31,0.22)",
+        "card-hover":
+          "inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 18px -10px rgba(0,0,0,0.8), 0 24px 48px -24px rgba(255,90,31,0.3)",
       },
     },
   },

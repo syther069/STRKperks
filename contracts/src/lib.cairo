@@ -1,5 +1,6 @@
 mod errors;
-mod nullifier_registry;
-mod reward_campaign;
-mod reward_router;
-mod campaign_factory;
+pub mod nullifier_registry;
+pub mod reward_campaign;
+pub mod reward_router;
+pub mod campaign_factory;
+pub mod test_token;

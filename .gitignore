@@ -11,6 +11,8 @@ node_modules/
 out/
 dist/
 coverage/
+contracts/target/
+contracts/deployed_addresses.env
 
 # TypeScript and tooling caches
 **/*.tsbuildinfo

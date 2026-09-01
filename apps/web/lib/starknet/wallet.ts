@@ -12,8 +12,17 @@ export interface StarknetWalletAdapter {
 export async function confirmTransaction(
   wallet: StarknetWalletAdapter,
   transactionHash: string,
+  timeoutMs = 120_000,
 ): Promise<string> {
-  if (wallet.waitForTransaction) await wallet.waitForTransaction(transactionHash);
+  if (!transactionHash) throw new Error("Cannot confirm an empty transaction hash");
+  if (wallet.waitForTransaction) {
+    await Promise.race([
+      wallet.waitForTransaction(transactionHash),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Transaction confirmation timed out; keep the hash and retry status polling")), timeoutMs),
+      ),
+    ]);
+  }
   return transactionHash;
 }
 

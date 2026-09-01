@@ -26,21 +26,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-btn transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none";
+      "inline-flex items-center justify-center font-medium rounded-btn transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none motion-reduce:transition-none";
 
     const variantStyles = {
       primary:
-        "bg-brand-primary text-fg-primary hover:bg-brand-primary-hover shadow-glow active:scale-[0.99]",
+        "bg-brand-primary text-fg-primary hover:bg-brand-primary-hover shadow-glow",
       secondary:
-        "bg-bg-raised text-fg-primary border border-border hover:border-border-hover hover:bg-bg-subtle active:scale-[0.99]",
+        "bg-bg-raised text-fg-primary border border-border hover:border-border-hover hover:bg-bg-subtle",
       ghost:
-        "text-fg-secondary hover:text-fg-primary hover:bg-bg-raised active:scale-[0.99]",
+        "text-fg-secondary hover:text-fg-primary hover:bg-bg-raised",
       danger:
-        "bg-status-error/15 text-status-error border border-status-error/30 hover:bg-status-error/25 active:scale-[0.99]",
+        "bg-status-error/15 text-status-error border border-status-error/30 hover:bg-status-error/25",
       reward:
-        "bg-brand-reward text-bg font-semibold hover:bg-brand-reward/90 shadow-glow-reward active:scale-[0.99]",
+        "bg-brand-reward text-bg font-semibold hover:bg-brand-reward/90 shadow-glow-reward",
       privacy:
-        "bg-brand-privacy-subtle text-brand-privacy border border-brand-privacy/40 hover:bg-brand-privacy/20 shadow-glow-privacy active:scale-[0.99]",
+        "bg-brand-privacy-subtle text-brand-privacy border border-brand-privacy/40 hover:bg-brand-privacy/20 shadow-glow-privacy",
     };
 
     const sizeStyles = {

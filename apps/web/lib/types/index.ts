@@ -18,6 +18,8 @@ export interface Campaign {
   status: CampaignStatus;
   nullifierNamespace: string;
   isShielded: boolean;
+  /** True when the record is local demo data and not chain state. */
+  isFixture?: boolean;
   contractAddress?: string;
   createdAt: number;
 }
@@ -36,6 +38,8 @@ export interface Conversion {
   nullifier: string;
   recipientAddress?: string; // Only stored locally or simulated for demo display
   claimTxHash?: string;
+  /** True when the record is local demo data and not chain state. */
+  isFixture?: boolean;
 }
 
 export interface ClaimReceipt {
@@ -49,9 +53,11 @@ export interface ClaimReceipt {
   recipientNoteHash: string;
   txHash: string;
   timestamp: number;
-  status: "settled" | "shielded_note_ready";
+  status: "submitted" | "settled" | "shielded_note_ready";
   blockNumber?: number;
   shieldedBalanceVerified: boolean;
+  /** True when the receipt is local demo data and not chain evidence. */
+  isFixture?: boolean;
 }
 
 export type TxType =
@@ -61,7 +67,7 @@ export type TxType =
   | "claim_reward"
   | "duplicate_claim_attempt";
 
-export type TxStatus = "pending" | "accepted_l2" | "rejected" | "failed";
+export type TxStatus = "pending" | "accepted_l2" | "rejected" | "failed" | "simulated";
 
 export interface TxRecord {
   hash: string;
@@ -73,6 +79,8 @@ export interface TxRecord {
   nullifier?: string;
   errorReason?: string;
   contractAddress?: string;
+  /** True when the record is local demo data and not chain state. */
+  isFixture?: boolean;
 }
 
 export interface ProtocolStats {
