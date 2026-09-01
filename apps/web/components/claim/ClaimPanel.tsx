@@ -14,14 +14,22 @@ import { deriveNullifier } from "../../lib/campaign/nullifier";
 import { DEMO_CONVERSION_ID, DEMO_RECIPIENT_SECRET } from "../../lib/utils/constants";
 import { Gift, ShieldCheck, ShieldAlert, Sparkles, AlertCircle } from "lucide-react";
 import confetti from "canvas-confetti";
-import { useContractActions } from "../../lib/starknet/useContractActions";
 import { LIVE_CONTRACTS_ENABLED } from "../../lib/utils/constants";
+import { LivePrivateClaimPanel } from "./LivePrivateClaimPanel";
 
 export interface ClaimPanelProps {
   campaign: Campaign;
 }
 
 export function ClaimPanel({ campaign }: ClaimPanelProps) {
+  return LIVE_CONTRACTS_ENABLED ? (
+    <LivePrivateClaimPanel campaign={campaign} />
+  ) : (
+    <DemoClaimPanel campaign={campaign} />
+  );
+}
+
+function DemoClaimPanel({ campaign }: ClaimPanelProps) {
   const {
     claimReward,
     attemptDuplicateClaim,
@@ -29,7 +37,6 @@ export function ClaimPanel({ campaign }: ClaimPanelProps) {
     simulatedAddress,
     simulatedWalletConnected,
   } = useDemoStore();
-  const live = useContractActions();
 
   const [conversionId, setConversionId] = useState(DEMO_CONVERSION_ID);
   const [recipientSecret, setRecipientSecret] = useState(DEMO_RECIPIENT_SECRET);
@@ -62,16 +69,9 @@ export function ClaimPanel({ campaign }: ClaimPanelProps) {
     setIsClaiming(true);
 
     try {
-      const res = LIVE_CONTRACTS_ENABLED
-        ? campaign.contractAddress
-          ? { txHash: await live.claimReward(campaign.contractAddress, campaign.nullifierNamespace, conversionId, recipientSecret, campaign.rewardAmount) }
-          : (() => { throw new Error("Campaign contract address is not configured"); })()
-        : await claimReward({ campaignId: campaign.id, conversionId, recipientSecret });
+      const res = await claimReward({ campaignId: campaign.id, conversionId, recipientSecret });
 
-      if ("txHash" in res) {
-        setReceipt({ id: `live_${Date.now()}`, campaignId: campaign.id, campaignName: campaign.name, rewardAmount: campaign.rewardAmount, tokenSymbol: campaign.tokenSymbol, conversionId, nullifier: previewNullifier, recipientNoteHash: "pending_strk20_note", txHash: res.txHash, timestamp: Math.floor(Date.now() / 1000), status: "shielded_note_ready", shieldedBalanceVerified: false });
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ["#FF5A1F", "#B7FF5A", "#3CE7C7"] });
-      } else if (res.isDuplicate || res.error) {
+      if (res.isDuplicate || res.error) {
         setDuplicateError({
           nullifier: previewNullifier,
           errorReason: res.error || "Duplicate claim rejected by contract",
@@ -96,18 +96,8 @@ export function ClaimPanel({ campaign }: ClaimPanelProps) {
     setIsAttemptingDuplicate(true);
     setDuplicateError(null);
     try {
-      if (LIVE_CONTRACTS_ENABLED) {
-        if (!campaign.contractAddress) throw new Error("Campaign contract address is not configured");
-        try {
-          await live.claimReward(campaign.contractAddress, campaign.nullifierNamespace, conversionId, recipientSecret, campaign.rewardAmount);
-          setDuplicateError({ nullifier: previewNullifier, errorReason: "Unexpectedly accepted: verify conversion approval and registry configuration" });
-        } catch (err: any) {
-          setDuplicateError({ nullifier: previewNullifier, errorReason: `Onchain replay rejected: ${err?.message || "transaction reverted"}` });
-        }
-      } else {
-        const res = await attemptDuplicateClaim(campaign.id, conversionId, recipientSecret);
-        setDuplicateError({ nullifier: res.nullifier, txHash: res.txHash, errorReason: res.error });
-      }
+      const res = await attemptDuplicateClaim(campaign.id, conversionId, recipientSecret);
+      setDuplicateError({ nullifier: res.nullifier, txHash: res.txHash, errorReason: res.error });
     } finally {
       setIsAttemptingDuplicate(false);
     }
@@ -157,7 +147,7 @@ export function ClaimPanel({ campaign }: ClaimPanelProps) {
             Settlement Mode
           </span>
           <span className="text-xs font-semibold text-brand-privacy flex items-center justify-end gap-1 mt-0.5">
-            <ShieldCheck className="w-3.5 h-3.5" /> {LIVE_CONTRACTS_ENABLED ? "Campaign claim (STRK20 note pending)" : "STRK20 Shielded Note (Demo)"}
+            <ShieldCheck className="w-3.5 h-3.5" /> STRK20 Shielded Note (Demo)
           </span>
         </div>
       </div>
@@ -221,10 +211,9 @@ export function ClaimPanel({ campaign }: ClaimPanelProps) {
             size="lg"
             className="w-full"
             isLoading={isClaiming}
-            disabled={LIVE_CONTRACTS_ENABLED && !live.isReady}
             leftIcon={<Gift className="w-4 h-4" />}
           >
-            {LIVE_CONTRACTS_ENABLED && !live.isReady ? "Connect Wallet to Claim" : LIVE_CONTRACTS_ENABLED ? `Submit Reward Claim (${formatSTRK(campaign.rewardAmount)} STRK)` : `Claim Private Reward (${formatSTRK(campaign.rewardAmount)} STRK)`}
+            {`Claim Private Reward (${formatSTRK(campaign.rewardAmount)} STRK)`}
           </Button>
 
           {/* Hackathon Demo Test Duplicate Button */}
@@ -237,7 +226,7 @@ export function ClaimPanel({ campaign }: ClaimPanelProps) {
             leftIcon={<ShieldAlert className="w-3.5 h-3.5" />}
             onClick={handleTestDuplicateAttack}
           >
-            {LIVE_CONTRACTS_ENABLED ? "Attempt Onchain Duplicate Claim (Replay Attack)" : "Hackathon Judge Test: Attempt Duplicate Claim (Replay Attack)"}
+            Hackathon Judge Test: Attempt Duplicate Claim (Replay Attack)
           </Button>
         </div>
       </form>

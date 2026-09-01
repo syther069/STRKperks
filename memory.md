@@ -23,3 +23,6 @@
 - Added the Cairo test matrix documenting required registry, campaign, router, and atomic-rollback cases; `snforge` execution remains pending because the Foundry archive cannot be extracted in WSL.
 - Added decimal-to-18-decimal token conversion and a client-only `useContractActions` hook that executes typed Starknet calls when a real wallet and deployed addresses are configured.
 - Corrected the demo claim path so nullifiers are derived from the recipient secret (not the public conversion ID), matching the documented privacy model; duplicate attempts reuse the same local secret.
+# Current audit note
+
+The repository now contains 24 Starknet Foundry tests. Live deployment and STRK20 wallet execution remain external launch gates; do not describe fixture hashes or local demo state as onchain evidence.

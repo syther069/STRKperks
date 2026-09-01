@@ -22,7 +22,7 @@ export function DemoTimeline() {
     },
     {
       id: 3,
-      title: "Fund Shielded Treasury",
+      title: "Fund Public Treasury",
       summary: "Deposit STRK tokens into STRK20 confidential pool",
     },
     {

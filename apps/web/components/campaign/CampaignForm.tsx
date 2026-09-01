@@ -9,13 +9,15 @@ import { Input, Textarea } from "../ui/Input";
 import { Card } from "../ui/Card";
 import { PrivacyBadge } from "../ui/Badge";
 import { formatSTRK } from "../../lib/utils/format";
-import { PlusCircle, ShieldCheck, Lock, Info, CheckCircle2 } from "lucide-react";
-import { APP_CONFIG, CONTRACT_ADDRESSES } from "../../lib/utils/constants";
+import { PlusCircle, ShieldCheck, Lock, CheckCircle2 } from "lucide-react";
+import { CONTRACT_ADDRESSES, LIVE_CONTRACTS_ENABLED } from "../../lib/utils/constants";
+import { useContractActions } from "../../lib/starknet/useContractActions";
 import confetti from "canvas-confetti";
 
 export function CampaignForm() {
   const router = useRouter();
   const { createCampaign } = useDemoStore();
+  const live = useContractActions();
 
   const [formData, setFormData] = useState<CampaignFormData>({
     name: "",
@@ -90,6 +92,22 @@ export function CampaignForm() {
     }
   };
 
+  const handleRegisterConfiguredCampaign = async () => {
+    setErrors({});
+    setIsSubmitting(true);
+    try {
+      if (!CONTRACT_ADDRESSES.rewardCampaign) {
+        throw new Error("NEXT_PUBLIC_REWARD_CAMPAIGN_ADDRESS is not configured");
+      }
+      const txHash = await live.createCampaign(CONTRACT_ADDRESSES.rewardCampaign);
+      setCreatedResult({ campaignId: "live-configured", txHash });
+    } catch (err: any) {
+      setErrors({ form: err.message || "Failed to register configured campaign" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (createdResult) {
     return (
       <Card className="max-w-2xl mx-auto p-6 space-y-6 border-status-success/40 bg-bg-surface">
@@ -99,10 +117,12 @@ export function CampaignForm() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-fg-primary">
-              Campaign Created Successfully on Starknet
+              {LIVE_CONTRACTS_ENABLED
+                ? "Configured Campaign Registered on Starknet"
+                : "Demo Campaign Created Successfully"}
             </h3>
             <p className="text-xs text-fg-secondary">
-              Campaign registered via CampaignFactory.cairo with shielded settlement routing.
+              Campaign registration is public; approved rewards can later enter an STRK20 open note.
             </p>
           </div>
         </div>
@@ -146,6 +166,35 @@ export function CampaignForm() {
             View All Campaigns
           </Button>
         </div>
+      </Card>
+    );
+  }
+
+  if (LIVE_CONTRACTS_ENABLED) {
+    return (
+      <Card className="max-w-2xl mx-auto p-6 space-y-5">
+        <div>
+          <h3 className="text-base font-semibold text-fg-primary">Register Configured Campaign</h3>
+          <p className="text-xs text-fg-secondary mt-1">
+            Campaign deployment and constructor configuration happen outside this UI. This action only registers the already-deployed address in CampaignFactory.
+          </p>
+        </div>
+        {errors.form && (
+          <div className="p-3 rounded bg-status-error/15 border border-status-error/30 text-status-error text-xs">
+            {errors.form}
+          </div>
+        )}
+        <div className="rounded border border-border bg-bg-raised p-3 font-mono text-xs break-all">
+          {CONTRACT_ADDRESSES.rewardCampaign || "No live campaign address configured"}
+        </div>
+        <Button
+          variant="primary"
+          isLoading={isSubmitting}
+          disabled={!live.isReady || !CONTRACT_ADDRESSES.rewardCampaign}
+          onClick={handleRegisterConfiguredCampaign}
+        >
+          {live.isReady ? "Register Deployed Campaign" : "Connect Owner Wallet"}
+        </Button>
       </Card>
     );
   }

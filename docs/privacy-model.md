@@ -1,17 +1,28 @@
-# StrkPerks privacy model
+# Privacy model
 
-## Implemented intent
+## Hidden by the STRK20 pool
 
-StrkPerks keeps raw claim secrets and recipient wallet addresses out of the campaign settlement payload. Replay protection is campaign-scoped and uses a domain-separated Starknet Poseidon nullifier derived from the campaign namespace and claimant secret. The registry stores only consumed nullifiers.
+- ownership of the open reward note;
+- the in-pool ownership graph for encrypted notes; and
+- later linkage between private note spends, absent authorized viewing data or
+  side-channel correlation.
 
-## Public data
+## Public or inferable
 
-Campaign existence/configuration, contract addresses, transaction timing, event fields, nullifier consumption, and any information a user voluntarily discloses remain public or inferable.
+- campaign, anonymizer, privacy-pool, and token addresses;
+- the open note's token and amount;
+- conversion ID, app nullifier, open-note ID, authorization expiry, and events;
+- campaign funding, transaction timing, and interaction frequency; and
+- deposits, withdrawals, registration, and protocol nullifiers as defined by
+  the deployed privacy protocol.
 
-## Not claimed
+The app nullifier prevents a campaign reward replay. It is not an STRK20 note
+nullifier. Distinctive amounts and closely timed funding/claims can reduce the
+effective anonymity set.
 
-This MVP does not provide full anonymity, untraceable transactions, hidden timing metadata, or zero-knowledge eligibility verification. STRK20 privacy properties depend on the exact deployed STRK20 implementation and adapter configuration.
+Claim secrets stay in browser memory only for app-nullifier derivation. The app
+does not request, transmit, or store a viewing key. Viewing keys enable
+selective disclosure and must remain controlled by the wallet owner.
 
-## Secret handling
-
-Secrets are generated and used client-side. They must not be sent to API routes, logged, or stored in localStorage/backend databases. A recipient commitment or signed eligibility authorization may be public; it is not the raw secret.
+Product language should say **private by default and selectively disclosable**,
+not anonymous, invisible, or untraceable.

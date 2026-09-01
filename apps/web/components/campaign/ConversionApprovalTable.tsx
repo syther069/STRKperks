@@ -12,7 +12,7 @@ import { deriveRecipientCommitment } from "../../lib/campaign/nullifier";
 import { CheckCircle2, Plus, Lock, UserCheck, Shield } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useContractActions } from "../../lib/starknet/useContractActions";
-import { LIVE_CONTRACTS_ENABLED } from "../../lib/utils/constants";
+import { CONTRACT_ADDRESSES, LIVE_CONTRACTS_ENABLED } from "../../lib/utils/constants";
 
 export interface ConversionApprovalTableProps {
   campaign: Campaign;
@@ -24,13 +24,14 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
   const campaignConversions = conversions.filter((c) => c.campaignId === campaign.id);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newConversionId, setNewConversionId] = useState(
-    `conv_${Math.random().toString(36).slice(2, 7)}`
-  );
-  const [recipientSecret, setRecipientSecret] = useState(
-    `secret_${Math.random().toString(36).slice(2, 9)}`
-  );
+  const [newConversionId, setNewConversionId] = useState("conv_new_claim");
+  const [recipientSecret, setRecipientSecret] = useState("demo_local_secret");
   const [rewardTier, setRewardTier] = useState("Standard Affiliate");
+  const [liveNullifier, setLiveNullifier] = useState("");
+  const [liveNoteId, setLiveNoteId] = useState("");
+  const [liveExpiry, setLiveExpiry] = useState(() =>
+    String(Math.floor(Date.now() / 1000) + 60 * 60),
+  );
   const [isApproving, setIsApproving] = useState<string | null>(null);
   const [liveApproved, setLiveApproved] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
@@ -44,8 +45,19 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
     setActionError(null);
     try {
       if (LIVE_CONTRACTS_ENABLED) {
-        if (!campaign.contractAddress) throw new Error("Campaign contract address is not configured");
-        const txHash = await live.approveConversion(campaign.contractAddress, newConversionId);
+        if (!CONTRACT_ADDRESSES.rewardCampaign) {
+          throw new Error("Configured live campaign address is missing");
+        }
+        if (!liveNullifier || !liveNoteId || !liveExpiry) {
+          throw new Error("Prepared nullifier, open-note ID, and expiry are required");
+        }
+        const txHash = await live.approveClaim(
+          CONTRACT_ADDRESSES.rewardCampaign,
+          newConversionId,
+          liveNullifier,
+          liveNoteId,
+          liveExpiry,
+        );
         setLiveApproved((current) => ({ ...current, [newConversionId]: txHash }));
       } else {
         await approveConversion({ campaignId: campaign.id, conversionId: newConversionId, recipientCommitment: calculatedCommitment, rewardTier });
@@ -70,9 +82,9 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
     setActionError(null);
     try {
       if (LIVE_CONTRACTS_ENABLED) {
-        if (!campaign.contractAddress) throw new Error("Campaign contract address is not configured");
-        const txHash = await live.approveConversion(campaign.contractAddress, conv.id);
-        setLiveApproved((current) => ({ ...current, [conv.id]: txHash }));
+        throw new Error(
+          "Live approvals require the claimant's prepared nullifier, exact open-note ID, and expiry; use Approve New Conversion",
+        );
       } else {
         await approveConversion({ campaignId: conv.campaignId, conversionId: conv.id, recipientCommitment: conv.recipientCommitment, rewardTier: conv.rewardTier });
       }
@@ -82,6 +94,8 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
         origin: { y: 0.7 },
         colors: ["#FF5A1F", "#3CE7C7"],
       });
+    } catch (err: any) {
+      setActionError(err?.message || "Failed to approve claim");
     } finally {
       setIsApproving(null);
     }
@@ -92,10 +106,10 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
       <div className="flex items-center justify-between">
         <div>
           <h4 className="text-sm font-semibold text-fg-primary">
-            Conversion Approvals & Recipient Commitments
+            Claim Authorizations
           </h4>
           <p className="text-xs text-fg-secondary">
-            Only approved conversions can settle private STRK20 notes.
+            Live approvals bind the conversion to one exact wallet-prepared open note.
           </p>
         </div>
         <Button
@@ -121,7 +135,9 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
               No conversions registered yet
             </div>
             <p className="text-xs text-fg-secondary mt-0.5">
-              Approve a conversion with a recipient commitment to allow private reward claims.
+              {LIVE_CONTRACTS_ENABLED
+                ? "Prepare a claimant note first, then approve its exact public authorization fields."
+                : "Approve a demo conversion with a recipient commitment."}
             </p>
           </div>
           <Button
@@ -129,7 +145,7 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
             size="sm"
             onClick={() => setIsModalOpen(true)}
           >
-            Approve Test Conversion
+            {LIVE_CONTRACTS_ENABLED ? "Approve Prepared Claim" : "Approve Test Conversion"}
           </Button>
         </div>
       ) : (
@@ -200,7 +216,7 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Approve Conversion"
-        description="Register a valid conversion and commitment hash for private reward settlement."
+        description="Authorize the exact prepared STRK20 open note. The claimant supplies these public preparation values."
         maxWidth="md"
       >
         <form onSubmit={handleApproveNew} className="space-y-4">
@@ -213,26 +229,53 @@ export function ConversionApprovalTable({ campaign }: ConversionApprovalTablePro
             helperText="Campaign-unique referral or conversion identifier"
           />
 
-          <Input
-            label="Recipient Secret / Salt (Simulated)"
-            placeholder="Recipient's private viewing seed"
-            value={recipientSecret}
-            onChange={(e) => setRecipientSecret(e.target.value)}
-            isMono
-            helperText="In production, derived client-side by recipient without revealing their address"
-          />
+          {LIVE_CONTRACTS_ENABLED ? (
+            <>
+              <Input
+                label="Campaign Nullifier"
+                placeholder="0x..."
+                value={liveNullifier}
+                onChange={(e) => setLiveNullifier(e.target.value)}
+                isMono
+                helperText="Copy from the claimant's prepared private claim"
+              />
+              <Input
+                label="Exact Open-Note ID"
+                placeholder="0x..."
+                value={liveNoteId}
+                onChange={(e) => setLiveNoteId(e.target.value)}
+                isMono
+                helperText="Changing this value redirects the payout, so verify it out of band"
+              />
+              <Input
+                label="Authorization Expiry (Unix seconds)"
+                value={liveExpiry}
+                onChange={(e) => setLiveExpiry(e.target.value)}
+                isMono
+                helperText="Must remain in the future when the private claim executes"
+              />
+            </>
+          ) : (
+            <>
+              <Input
+                label="Recipient Secret / Salt (Simulated)"
+                placeholder="Recipient's private viewing seed"
+                value={recipientSecret}
+                onChange={(e) => setRecipientSecret(e.target.value)}
+                isMono
+                helperText="Demo-only local seed; never used by the live STRK20 flow"
+              />
 
-          <div className="p-3 rounded bg-bg-surface border border-border space-y-1.5 font-mono text-xs">
-            <span className="text-[10px] text-fg-muted uppercase tracking-wider block font-sans">
-              Derived Recipient Commitment Hash:
-            </span>
-            <div className="text-brand-privacy break-all text-[11px]">
-              {calculatedCommitment}
-            </div>
-            <p className="text-[10px] text-fg-muted font-sans pt-1">
-              This commitment is public onchain, but the recipient wallet remains private.
-            </p>
-          </div>
+              <div className="p-3 rounded bg-bg-surface border border-border space-y-1.5 font-mono text-xs">
+                <span className="text-[10px] text-fg-muted uppercase tracking-wider block font-sans">
+                  Demo Recipient Commitment Hash:
+                </span>
+                <div className="text-brand-privacy break-all text-[11px]">
+                  {calculatedCommitment}
+                </div>
+              </div>
+            </>
+          )}
 
           <Input
             label="Reward Tier"

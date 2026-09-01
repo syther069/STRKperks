@@ -55,7 +55,7 @@ export function JudgeProofPanel() {
       } else if (demoStep === 2) {
         const res = await createCampaign({
           name: "Judge Demo: Ekubo LP Referral Campaign",
-          description: "Judge demo for campaign-scoped replay protection (STRK20 adapter pending)",
+          description: "Simulated judge walkthrough for campaign-scoped replay protection",
           rewardAmount: "50.0",
           maxClaims: 100,
           durationDays: 30,
@@ -76,6 +76,7 @@ export function JudgeProofPanel() {
           conversionId: "conv_judge_verified_01",
           recipientCommitment: commitment,
           rewardTier: "Hackathon Evaluation",
+          recipientSecret: "seed_judge_demo_user",
         });
         setStepResult(res);
         confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
@@ -90,11 +91,11 @@ export function JudgeProofPanel() {
         confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
         setDemoStep(6);
       } else if (demoStep === 6) {
-        const res = await attemptDuplicateClaim(demoCampaign.id, "conv_judge_verified_01");
+        const res = await attemptDuplicateClaim(demoCampaign.id, "conv_judge_verified_01", "seed_judge_demo_user");
         setStepResult(res);
         setDemoStep(7);
       } else if (demoStep === 7) {
-        setStepResult({ message: "Starknet contract proofs verified; STRK20 adapter proof pending." });
+        setStepResult({ message: "Simulation complete. Use the live flow only with reviewed, verified deployments." });
       }
     } finally {
       setLoading(false);
@@ -123,7 +124,7 @@ export function JudgeProofPanel() {
           <p className="text-xs text-fg-secondary">
             {demoStep === 1 && "Establishes connection to Starknet Sepolia RPC."}
             {demoStep === 2 && "Executes CampaignFactory.cairo::create_campaign with nullifier namespace."}
-            {demoStep === 3 && "Locks STRK token budget into the STRK20 confidential router pool."}
+              {demoStep === 3 && "Simulates a public ERC-20 campaign treasury deposit."}
             {demoStep === 4 && "Campaign owner registers authorized conversion and recipient commitment hash."}
             {demoStep === 5 && "Recipient generates private note without publishing their public wallet address."}
             {demoStep === 6 && "Attacker attempts to resubmit the same conversion; NullifierRegistry.cairo reverts."}
@@ -173,7 +174,7 @@ export function JudgeProofPanel() {
             </div>
             <div className="flex justify-between">
               <span className="text-fg-muted">Deposit Budget:</span>
-              <span className="text-brand-reward">+2,500.0 STRK (Confidential)</span>
+              <span className="text-brand-reward">+2,500.0 STRK (Public Treasury Demo)</span>
             </div>
           </div>
         )}
@@ -199,7 +200,7 @@ export function JudgeProofPanel() {
             </div>
             <div className="flex justify-between">
               <span className="text-fg-muted">Recipient Identity Exposure:</span>
-              <span className="text-status-success font-semibold">0% (Completely Hidden)</span>
+              <span className="text-brand-privacy font-semibold">Owner hidden in intended STRK20 flow</span>
             </div>
           </div>
         )}
@@ -261,7 +262,7 @@ export function JudgeProofPanel() {
         >
           {demoStep === 1 && "Execute Step 1: Connect Wallet"}
           {demoStep === 2 && "Execute Step 2: Create Campaign"}
-          {demoStep === 3 && "Execute Step 3: Fund Shielded Treasury"}
+          {demoStep === 3 && "Execute Step 3: Fund Public Treasury"}
           {demoStep === 4 && "Execute Step 4: Approve Conversion"}
           {demoStep === 5 && "Execute Step 5: Settle Private Reward"}
           {demoStep === 6 && "Execute Step 6: Test Replay Rejection"}

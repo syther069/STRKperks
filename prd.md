@@ -1,4 +1,6 @@
-# VeilMint PRD
+# StrkPerks PRD (historical product specification)
+
+> This document contains the original product scope. The current submission is a staged prototype: STRK20 settlement is not proven end to end, and any acceptance criterion below must be checked against the current implementation and deployment record.
 
 Private reward distribution for STRK20 communities on Starknet.
 

@@ -32,7 +32,7 @@ export default function DocsPage() {
     {
       name: "RewardRouter.cairo",
       role: "STRK20 Settlement Gateway",
-      desc: "Adapter boundary for STRK20 shielded balances and private-note settlement; live ABI wiring is pending verified hackathon documentation.",
+      desc: "Unaudited STRK20 anonymizer draft: pool-only privacy_invoke, exact balance-delta accounting, and one OpenNoteDeposit output.",
       address: CONTRACT_ADDRESSES.rewardRouter,
     },
   ];
@@ -49,7 +49,7 @@ export default function DocsPage() {
           StrkPerks Architecture & Privacy Specifications
         </h1>
         <p className="text-sm text-fg-secondary leading-relaxed">
-          How StrkPerks leverages Cairo smart contracts on Starknet, with a documented boundary for future STRK20 private settlement.
+          How StrkPerks combines Cairo campaign controls with a Wallet API STRK20 private-note payout, including the remaining audit and network-test gates.
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export default function DocsPage() {
               <div>
                 <strong className="text-fg-primary font-sans">Onchain STRK Funding:</strong>
                 <p className="text-fg-secondary text-[11px] mt-0.5">
-                  Owner approves and deposits STRK into the deployed campaign contract. Private-note funding remains pending the verified STRK20 adapter.
+                  Owner approves and deposits STRK into the campaign contract through a public ERC-20 transaction. This treasury leg is not private.
                 </p>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function DocsPage() {
               <div>
                 <strong className="text-fg-primary font-sans">Conversion Authorization:</strong>
                 <p className="text-fg-secondary text-[11px] mt-0.5">
-                  Campaign owner approves a valid conversion using the recipient&apos;s commitment hash (without learning their public wallet address).
+                  After wallet preparation, the owner approves the exact conversion ID, app nullifier, open-note ID, and expiry.
                 </p>
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function DocsPage() {
               <div>
                 <strong className="text-fg-primary font-sans">Private Settlement & Nullifier Consumption:</strong>
                 <p className="text-fg-secondary text-[11px] mt-0.5">
-                  Recipient claims their reward. The contract consumes the campaign-scoped nullifier before calling the configured settlement adapter. Replay attempts are rejected by NullifierRegistry.cairo; private-note behavior depends on the verified STRK20 adapter.
+                  The privacy pool calls the anonymizer, which consumes the exact approved campaign claim and returns the reward as one open-note deposit. Replay attempts revert.
                 </p>
               </div>
             </div>

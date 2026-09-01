@@ -1,9 +1,11 @@
 [package]
 name = "strkperks_contracts"
 version = "0.1.0"
+edition = "2024_07"
 
 [dependencies]
 starknet = "2.20.1"
+privacy = { git = "https://github.com/starkware-libs/starknet-privacy", tag = "PRIVACY-0.14.3-RC.5" }
 
 [dev-dependencies]
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.63.0" }

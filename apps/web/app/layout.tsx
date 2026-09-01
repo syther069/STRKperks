@@ -17,7 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-bg text-fg-primary antialiased flex flex-col min-h-screen">
+      <body
+        className="font-sans bg-bg text-fg-primary antialiased flex min-h-dvh flex-col"
+      >
         <WalletProvider>
           <Navbar />
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAccount, useConnect, useDisconnect, useNetwork } from "@starknet-react/core";
 import { useDemoStore } from "../../lib/store/demoStore";
 import { Button } from "../ui/Button";
 import { Modal } from "../ui/Modal";
 import { shortenAddress, formatSTRK } from "../../lib/utils/format";
-import { Wallet, LogOut, ChevronDown, Check, Shield, Layers } from "lucide-react";
-import { detectStrk20WalletApi, Strk20Capability } from "../../lib/strk20/capabilities";
+import { Wallet, LogOut, ChevronDown, Shield } from "lucide-react";
+import { useStrk20Wallet } from "./Strk20WalletProvider";
 
 export function WalletButton() {
-  const { address, account, isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const { chain } = useNetwork();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const strk20 = useStrk20Wallet();
 
   const {
     isDemoMode,
@@ -25,28 +26,17 @@ export function WalletButton() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [strk20Capability, setStrk20Capability] = useState<Strk20Capability | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    if (!isConnected || !account) {
-      setStrk20Capability(null);
-      return () => { active = false; };
-    }
-    detectStrk20WalletApi(account).then((capability) => {
-      if (active) setStrk20Capability(capability);
-    });
-    return () => { active = false; };
-  }, [account, isConnected]);
 
   // Active address determination
   const activeAddress = isConnected
     ? address
+    : strk20.address
+    ? strk20.address
     : simulatedWalletConnected
     ? simulatedAddress
     : null;
 
-  const isAnyConnected = isConnected || simulatedWalletConnected;
+  const isAnyConnected = isConnected || Boolean(strk20.address) || simulatedWalletConnected;
 
   return (
     <>
@@ -74,7 +64,9 @@ export function WalletButton() {
               </div>
               <div className="h-3.5 w-px bg-border" />
               <span className="font-mono text-brand-reward font-semibold">
-                {formatSTRK(simulatedBalanceSTRK)} STRK
+                {simulatedWalletConnected && !isConnected && !strk20.address
+                  ? `${formatSTRK(simulatedBalanceSTRK)} STRK · Demo`
+                  : "Connected"}
               </span>
               <ChevronDown className="w-3.5 h-3.5 text-fg-muted" />
             </button>
@@ -98,11 +90,13 @@ export function WalletButton() {
                     </div>
                   </div>
 
-                  {isConnected && (
+                  {(isConnected || strk20.address) && (
                     <div className="mb-2 rounded border border-border px-2.5 py-2 text-[11px]">
                       <div className="text-fg-muted uppercase tracking-wider font-semibold text-[10px]">STRK20 Wallet API</div>
-                      <div className={strk20Capability?.supported ? "text-status-success" : "text-fg-muted"}>
-                        {strk20Capability?.supported ? "Supported" : "Not detected"}
+                      <div className={strk20.supported ? "text-status-success" : "text-fg-muted"}>
+                        {strk20.supported
+                          ? `${strk20.walletName} · ${strk20.versions.join(", ")}`
+                          : "Connect a privacy-capable wallet below"}
                       </div>
                     </div>
                   )}
@@ -112,7 +106,11 @@ export function WalletButton() {
                       onClick={() => {
                         if (isConnected) {
                           disconnect();
-                        } else {
+                        }
+                        if (strk20.address) {
+                          void strk20.disconnect();
+                        }
+                        if (!isConnected && !strk20.address) {
                           toggleWalletConnection(false);
                         }
                         setIsDropdownOpen(false);
@@ -140,6 +138,39 @@ export function WalletButton() {
       >
         <div className="space-y-3">
           <div className="space-y-2">
+            {strk20.wallets.map((wallet) => (
+              <button
+                key={`privacy-${wallet.name}`}
+                disabled={strk20.connecting}
+                onClick={async () => {
+                  try {
+                    await strk20.connect(wallet.name);
+                    setIsOpen(false);
+                  } catch {
+                    // The provider exposes a user-facing error below.
+                  }
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-btn bg-brand-privacy-subtle/20 border border-brand-privacy/40 hover:bg-brand-privacy-subtle/40 transition-all cursor-pointer text-left disabled:opacity-60"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded bg-bg-raised border border-border">
+                    <Shield className="h-4 w-4 text-brand-privacy" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-fg-primary">{wallet.name}</div>
+                    <div className="text-[11px] text-brand-privacy font-mono">STRK20 Wallet API</div>
+                  </div>
+                </div>
+                <span className="text-xs text-brand-privacy font-medium">Private</span>
+              </button>
+            ))}
+
+            {strk20.error && (
+              <p className="rounded border border-status-error/30 bg-status-error/10 p-2 text-xs text-status-error">
+                {strk20.error}
+              </p>
+            )}
+
             {connectors.map((connector) => (
               <button
                 key={connector.id}
@@ -183,7 +214,7 @@ export function WalletButton() {
                     Judge Demo Wallet
                   </div>
                   <div className="text-[11px] text-fg-muted">
-                    Pre-funded Starknet Sepolia Account
+                    Local simulated account; no network transaction
                   </div>
                 </div>
               </div>

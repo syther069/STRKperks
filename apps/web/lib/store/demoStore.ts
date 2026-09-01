@@ -47,6 +47,7 @@ interface DemoState {
     conversionId: string;
     recipientCommitment: string;
     rewardTier: string;
+    recipientSecret?: string;
   }) => Promise<{ txHash: string }>;
   claimReward: (data: {
     campaignId: string;
@@ -66,12 +67,9 @@ export const useDemoStore = create<DemoState>((set, get) => ({
   campaigns: INITIAL_CAMPAIGNS,
   conversions: INITIAL_CONVERSIONS,
   transactions: INITIAL_TRANSACTIONS,
-  consumedNullifiers: new Set([
-    "0x0482910482910482910482910482910482910482910482910482910482910482",
-    "0x01a938f291048291048291048291048291048291048291048291048291048291",
-  ]),
+  consumedNullifiers: new Set(),
 
-  simulatedWalletConnected: true,
+  simulatedWalletConnected: false,
   simulatedAddress: "0x01a93b482f018749ab8295c1029487fa92305819ad74e928",
   simulatedBalanceSTRK: "1420.50",
 
@@ -97,7 +95,7 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     const timestamp = Math.floor(Date.now() / 1000);
     const campaignId = `camp_${data.nullifierNamespace}_${Date.now().toString().slice(-4)}`;
     const totalBudget = (parseFloat(data.rewardAmount) * data.maxClaims).toFixed(1);
-    const txHash = `0x07a1${Math.random().toString(16).slice(2, 10)}${timestamp.toString(16)}8f4102c`;
+    const txHash = "";
 
     const newCampaign: Campaign = {
       id: campaignId,
@@ -116,15 +114,15 @@ export const useDemoStore = create<DemoState>((set, get) => ({
       endTime: timestamp + data.durationDays * 86400,
       status: "active",
       nullifierNamespace: data.nullifierNamespace,
-      isShielded: true,
-      contractAddress: `0x03${Math.random().toString(16).slice(2, 40)}`,
+      isShielded: false,
       createdAt: timestamp,
     };
 
     const newTx: TxRecord = {
+      isFixture: true,
       hash: txHash,
       type: "create_campaign",
-      status: "accepted_l2",
+      status: "simulated",
       timestamp,
       summary: `Campaign Created: ${data.name} (${totalBudget} STRK budget)`,
       campaignId,
@@ -146,14 +144,15 @@ export const useDemoStore = create<DemoState>((set, get) => ({
 
   fundCampaign: async (campaignId, amountSTRK) => {
     const timestamp = Math.floor(Date.now() / 1000);
-    const txHash = `0x04d2${Math.random().toString(16).slice(2, 10)}${timestamp.toString(16)}f81903e`;
+    const txHash = "";
 
     const newTx: TxRecord = {
+      isFixture: true,
       hash: txHash,
       type: "fund_shielded",
-      status: "accepted_l2",
+      status: "simulated",
       timestamp,
-      summary: `Shielded Deposit: ${amountSTRK} STRK deposited to campaign ${campaignId}`,
+      summary: `Demo Public Treasury Funding: ${amountSTRK} STRK for campaign ${campaignId}`,
       campaignId,
     };
 
@@ -175,11 +174,11 @@ export const useDemoStore = create<DemoState>((set, get) => ({
 
   approveConversion: async (data) => {
     const timestamp = Math.floor(Date.now() / 1000);
-    const txHash = `0x05b9${Math.random().toString(16).slice(2, 10)}${timestamp.toString(16)}61a098d`;
+    const txHash = "";
     const campaign = get().campaigns.find((c) => c.id === data.campaignId);
     const nullifier = deriveNullifier(
       campaign?.nullifierNamespace || "default_ns",
-      data.conversionId
+      data.recipientSecret || data.conversionId,
     );
 
     const newConversion: Conversion = {
@@ -195,9 +194,10 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     };
 
     const newTx: TxRecord = {
+      isFixture: true,
       hash: txHash,
       type: "approve_conversion",
-      status: "accepted_l2",
+      status: "simulated",
       timestamp,
       summary: `Conversion Approved: ${data.conversionId} (${campaign?.rewardAmount || "50.0"} STRK)`,
       campaignId: data.campaignId,
@@ -218,8 +218,22 @@ export const useDemoStore = create<DemoState>((set, get) => ({
   claimReward: async (data) => {
     const campaign = get().campaigns.find((c) => c.id === data.campaignId);
     if (!campaign) return { error: "Campaign not found" };
+    const conversion = get().conversions.find(
+      (candidate) => candidate.id === data.conversionId && candidate.campaignId === data.campaignId,
+    );
+    if (!conversion || conversion.status !== "approved") {
+      return { error: "Conversion is not approved for this campaign" };
+    }
 
     const nullifier = deriveNullifier(campaign.nullifierNamespace, data.recipientSecret);
+
+    if (conversion.nullifier !== nullifier) {
+      return { error: "Claim secret does not match the approved conversion" };
+    }
+
+    if (parseFloat(campaign.remainingBudget) < parseFloat(campaign.rewardAmount)) {
+      return { error: "Campaign has insufficient simulated budget" };
+    }
 
     // Check Nullifier Registry
     if (get().consumedNullifiers.has(nullifier)) {
@@ -229,7 +243,7 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     }
 
     const timestamp = Math.floor(Date.now() / 1000);
-    const txHash = `0x06e1${Math.random().toString(16).slice(2, 10)}${timestamp.toString(16)}a9f82c4`;
+    const txHash = "";
     const note = generatePrivateRewardNote(
       campaign.id,
       campaign.rewardAmount,
@@ -237,6 +251,7 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     );
 
     const receipt: ClaimReceipt = {
+      isFixture: true,
       id: `rcpt_${Date.now()}`,
       campaignId: campaign.id,
       campaignName: campaign.name,
@@ -247,14 +262,15 @@ export const useDemoStore = create<DemoState>((set, get) => ({
       recipientNoteHash: note.noteHash,
       txHash,
       timestamp,
-      status: "settled",
-      shieldedBalanceVerified: true,
+      status: "submitted",
+      shieldedBalanceVerified: false,
     };
 
     const newTx: TxRecord = {
+      isFixture: true,
       hash: txHash,
       type: "claim_reward",
-      status: "accepted_l2",
+      status: "simulated",
       timestamp,
       summary: `Private Reward Settled: ${campaign.rewardAmount} STRK Note Created`,
       campaignId: campaign.id,
@@ -303,13 +319,15 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     );
 
     const timestamp = Math.floor(Date.now() / 1000);
-    const rejectTxHash = `0x02a9${Math.random().toString(16).slice(2, 10)}${timestamp.toString(16)}deadbeef`;
+    if (!get().consumedNullifiers.has(nullifier)) {
+      return { error: "No prior simulated claim exists for this nullifier", nullifier, txHash: "" };
+    }
     const errorReason = `Reverted on Starknet L2: NullifierRegistry.cairo::is_nullifier_used returned true for ${nullifier.slice(0, 10)}...${nullifier.slice(-8)}. Duplicate claim rejected!`;
 
     const newTx: TxRecord = {
-      hash: rejectTxHash,
+      hash: "",
       type: "duplicate_claim_attempt",
-      status: "rejected",
+      status: "simulated",
       timestamp,
       summary: `Duplicate Claim Replay Attack Blocked for conversion ${conversionId}`,
       campaignId,
@@ -333,7 +351,7 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     return {
       error: errorReason,
       nullifier,
-      txHash: rejectTxHash,
+      txHash: "",
     };
   },
 
@@ -343,10 +361,8 @@ export const useDemoStore = create<DemoState>((set, get) => ({
       campaigns: INITIAL_CAMPAIGNS,
       conversions: INITIAL_CONVERSIONS,
       transactions: INITIAL_TRANSACTIONS,
-      consumedNullifiers: new Set([
-        "0x0482910482910482910482910482910482910482910482910482910482910482",
-        "0x01a938f291048291048291048291048291048291048291048291048291048291",
-      ]),
+      consumedNullifiers: new Set(),
+      simulatedWalletConnected: false,
       demoStep: 1,
       activeReceipt: null,
       lastError: null,

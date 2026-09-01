@@ -1,101 +1,94 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-export PATH="/home/syther/.local/bin:$PATH"
-export RPC_URL="https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_10/alch_V90lFdPmF2bKD7C1HZ3Bj"
-export ACCOUNT="strkperks-deployer"
-export DEPLOYER_ADDRESS="0x018302fc803b8cce3b350d3ddfe6ff4c00061961ba15f826373b3cc798889054"
+: "${RPC_URL:?Set RPC_URL to a trusted Starknet RPC endpoint}"
+: "${NETWORK:=sepolia}"
+: "${ACCOUNT:?Set ACCOUNT to a configured, deployed sncast account name}"
+: "${DEPLOYER_ADDRESS:?Set DEPLOYER_ADDRESS to the campaign owner address}"
+: "${PRIVACY_POOL_ADDRESS:?Set PRIVACY_POOL_ADDRESS from the current official privacy release}"
+: "${REWARD_TOKEN_ADDRESS:?Set REWARD_TOKEN_ADDRESS to the ERC-20 reward token}"
 
-echo "=== Deploying Account ==="
-DEPLOY_OUT=$(sncast account deploy --name $ACCOUNT --url $RPC_URL 2>&1 || true)
-echo "$DEPLOY_OUT"
-if echo "$DEPLOY_OUT" | grep -q "exceed balance (0)"; then
-  echo "Account deployment failed due to zero balance. Please ensure the faucet transaction has cleared on Starknet Sepolia."
+if [[ "$NETWORK" != "sepolia" ]]; then
+  echo "Only Sepolia is supported by this deployment script; set NETWORK=sepolia." >&2
   exit 1
 fi
-if echo "$DEPLOY_OUT" | grep -q "error"; then
-  if echo "$DEPLOY_OUT" | grep -q "already declared" || echo "$DEPLOY_OUT" | grep -q "already deployed" || echo "$DEPLOY_OUT" | grep -q "Transaction hash"; then
-      echo "Account is already deployed or deploying."
-  else
-      echo "Account deployment encountered an error."
-      exit 1
-  fi
+if [[ "$RPC_URL" =~ mainnet ]]; then
+  echo "Refusing a Sepolia deployment against a mainnet RPC URL." >&2
+  exit 1
 fi
+
+REWARD_AMOUNT="${REWARD_AMOUNT:-1000000000000000000}"
+MAX_CLAIMS="${MAX_CLAIMS:-100}"
+START_TIME="${START_TIME:-$(date +%s)}"
+END_TIME="${END_TIME:-$(date -d 'now + 30 days' +%s)}"
 
 extract_hex() {
   echo "$1" | grep -m 1 -oE '0x[0-9a-fA-F]{60,66}' || true
 }
 
-echo "=== Declaring Contracts ==="
 declare_contract() {
-  local contract=$1
-  local out
-  out=$(sncast --account $ACCOUNT declare --url $RPC_URL --contract-name $contract 2>&1 || true)
-  echo "$out"
+  local contract="$1"
+  local output
+  output=$(sncast --account "$ACCOUNT" declare --url "$RPC_URL" --contract-name "$contract")
+  echo "$output" >&2
+  extract_hex "$output"
 }
 
-FACTORY_DEC=$(declare_contract "CampaignFactory")
-NULLIFIER_DEC=$(declare_contract "NullifierRegistry")
-ROUTER_DEC=$(declare_contract "RewardRouter")
-CAMPAIGN_DEC=$(declare_contract "RewardCampaign")
+deploy_contract() {
+  local output
+  output=$(sncast --wait --account "$ACCOUNT" deploy --url "$RPC_URL" "$@")
+  echo "$output" >&2
+  extract_hex "$output"
+}
 
-FACTORY_HASH=$(extract_hex "$FACTORY_DEC")
-NULLIFIER_HASH=$(extract_hex "$NULLIFIER_DEC")
-ROUTER_HASH=$(extract_hex "$ROUTER_DEC")
-CAMPAIGN_HASH=$(extract_hex "$CAMPAIGN_DEC")
+echo "Building and declaring the current contract sources"
+scarb build
+NULLIFIER_HASH=$(declare_contract "NullifierRegistry")
+FACTORY_HASH=$(declare_contract "CampaignFactory")
+CAMPAIGN_HASH=$(declare_contract "RewardCampaign")
+ROUTER_HASH=$(declare_contract "RewardRouter")
 
-echo "Factory Hash: $FACTORY_HASH"
-echo "Nullifier Hash: $NULLIFIER_HASH"
-echo "Router Hash: $ROUTER_HASH"
-echo "Campaign Hash: $CAMPAIGN_HASH"
+for required_hash in "$NULLIFIER_HASH" "$FACTORY_HASH" "$CAMPAIGN_HASH" "$ROUTER_HASH"; do
+  if [[ -z "$required_hash" ]]; then
+    echo "Could not extract a declared class hash; stop before deploying." >&2
+    exit 1
+  fi
+done
 
-if [[ -z "$FACTORY_HASH" ]]; then
-  echo "Declaration failed."
+echo "Deploying registry, factory, campaign, and anonymizer"
+NULLIFIER_ADDR=$(deploy_contract --class-hash "$NULLIFIER_HASH")
+FACTORY_ADDR=$(deploy_contract --class-hash "$FACTORY_HASH")
+CAMPAIGN_ADDR=$(deploy_contract \
+  --class-hash "$CAMPAIGN_HASH" \
+  --constructor-calldata \
+  "$DEPLOYER_ADDRESS" "$REWARD_TOKEN_ADDRESS" "$NULLIFIER_ADDR" \
+  "$REWARD_AMOUNT" "$MAX_CLAIMS" "$START_TIME" "$END_TIME")
+ROUTER_ADDR=$(deploy_contract \
+  --class-hash "$ROUTER_HASH" \
+  --constructor-calldata "$PRIVACY_POOL_ADDRESS" "$CAMPAIGN_ADDR" "$REWARD_TOKEN_ADDRESS")
+
+if [[ -z "$NULLIFIER_ADDR" || -z "$FACTORY_ADDR" || -z "$CAMPAIGN_ADDR" || -z "$ROUTER_ADDR" ]]; then
+  echo "Could not extract every deployed address; stop before post-deployment wiring." >&2
   exit 1
 fi
 
-echo "=== Deploying Contracts ==="
-deploy_contract() {
-  local out
-  out=$(sncast --account $ACCOUNT deploy --url $RPC_URL "$@" 2>&1 || true)
-  echo "$out"
-}
+echo "Applying one-time campaign wiring"
+sncast --wait --account "$ACCOUNT" invoke --url "$RPC_URL" \
+  --contract-address "$CAMPAIGN_ADDR" --function configure_anonymizer --calldata "$ROUTER_ADDR"
+sncast --wait --account "$ACCOUNT" invoke --url "$RPC_URL" \
+  --contract-address "$FACTORY_ADDR" --function create_campaign --calldata "$CAMPAIGN_ADDR"
 
-echo "Deploying NullifierRegistry..."
-NULLIFIER_DEP=$(deploy_contract --class-hash $NULLIFIER_HASH)
-NULLIFIER_ADDR=$(extract_hex "$NULLIFIER_DEP")
+printf '%s\n' \
+  "NEXT_PUBLIC_NULLIFIER_REGISTRY_ADDRESS=$NULLIFIER_ADDR" \
+  "NEXT_PUBLIC_CAMPAIGN_FACTORY_ADDRESS=$FACTORY_ADDR" \
+  "NEXT_PUBLIC_REWARD_CAMPAIGN_ADDRESS=$CAMPAIGN_ADDR" \
+  "NEXT_PUBLIC_REWARD_ROUTER_ADDRESS=$ROUTER_ADDR" \
+  "NEXT_PUBLIC_REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" \
+  "NEXT_PUBLIC_STRK20_PRIVACY_POOL_ADDRESS=$PRIVACY_POOL_ADDRESS" \
+  "NULLIFIER_REGISTRY_CLASS_HASH=$NULLIFIER_HASH" \
+  "CAMPAIGN_FACTORY_CLASS_HASH=$FACTORY_HASH" \
+  "REWARD_CAMPAIGN_CLASS_HASH=$CAMPAIGN_HASH" \
+  "REWARD_ROUTER_CLASS_HASH=$ROUTER_HASH" \
+  > deployed_addresses.env
 
-echo "Deploying RewardRouter..."
-ROUTER_DEP=$(deploy_contract --class-hash $ROUTER_HASH --constructor-calldata $DEPLOYER_ADDRESS)
-ROUTER_ADDR=$(extract_hex "$ROUTER_DEP")
-
-echo "Deploying CampaignFactory..."
-FACTORY_DEP=$(deploy_contract --class-hash $FACTORY_HASH)
-FACTORY_ADDR=$(extract_hex "$FACTORY_DEP")
-
-echo "Deploying RewardCampaign..."
-STRK_TOKEN="0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
-REWARD_AMOUNT="1000000000000000000"
-MAX_CLAIMS="100"
-START_TIME=$(date -d 'now' +%s)
-END_TIME=$(date -d 'now + 30 days' +%s)
-
-CAMPAIGN_DEP=$(deploy_contract --class-hash $CAMPAIGN_HASH --constructor-calldata $DEPLOYER_ADDRESS $STRK_TOKEN $REWARD_AMOUNT $MAX_CLAIMS $START_TIME $END_TIME)
-CAMPAIGN_ADDR=$(extract_hex "$CAMPAIGN_DEP")
-
-echo "Nullifier Address: $NULLIFIER_ADDR"
-echo "Router Address: $ROUTER_ADDR"
-echo "Factory Address: $FACTORY_ADDR"
-echo "Campaign Address: $CAMPAIGN_ADDR"
-
-echo "=== Post-Deployment Wiring ==="
-echo "Authorizing Campaign in Router..."
-sncast --account $ACCOUNT invoke --url $RPC_URL --contract-address $ROUTER_ADDR --function authorize_campaign --calldata $CAMPAIGN_ADDR
-
-echo "Registering Campaign in Factory..."
-sncast --account $ACCOUNT invoke --url $RPC_URL --contract-address $FACTORY_ADDR --function create_campaign --calldata $CAMPAIGN_ADDR
-
-echo "=== Deployment Complete ==="
-echo "NEXT_PUBLIC_NULLIFIER_REGISTRY_ADDRESS=$NULLIFIER_ADDR" > /tmp/deployed_addresses.txt
-echo "NEXT_PUBLIC_REWARD_ROUTER_ADDRESS=$ROUTER_ADDR" >> /tmp/deployed_addresses.txt
-echo "NEXT_PUBLIC_CAMPAIGN_FACTORY_ADDRESS=$FACTORY_ADDR" >> /tmp/deployed_addresses.txt
+echo "Deployment complete. Verify every address before enabling live mode; output: contracts/deployed_addresses.env"

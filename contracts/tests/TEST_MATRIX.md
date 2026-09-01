@@ -1,36 +1,36 @@
 # Cairo contract test matrix
 
-This matrix is the required Starknet Foundry suite for the compiled contracts. It is intentionally kept next to the contracts until `snforge` is available in the environment.
+The Starknet Foundry suite currently contains 24 tests (including expiry and insufficient-budget guards).
 
 ## NullifierRegistry
 
-- A campaign can consume a fresh nullifier.
-- The same campaign/nullifier pair reverts with `NULLIFIER_USED`.
-- A different campaign may consume the same nullifier value.
-- A non-campaign caller reverts with `CAMPAIGN_NOT_AUTHORIZED`.
-- Per-campaign counts increment exactly once.
+- fresh consume and count;
+- replay rejection;
+- campaign scoping; and
+- unauthorized caller rejection.
 
 ## RewardCampaign
 
-- Constructor rejects zero owner/token, zero reward, zero claim limit, and invalid windows.
-- Only owner may fund, approve, pause, resume, or close.
-- `fund_with_erc20` credits budget only when `transfer_from` returns true.
-- Claims reject before start, after expiry, while paused, and after close.
-- Claims reject without approval, with a mismatched amount, at the claim limit, or over budget.
-- A valid claim consumes the registry nullifier, decrements budget, increments claims, clears approval, and requests router settlement.
-- Registry/router failure reverts the entire claim state transition.
+- owner-only funding and exact ERC-20 transfer accounting;
+- one-time anonymizer configuration;
+- exact claim approval and expiry;
+- only configured anonymizer may claim;
+- nullifier replay rejection;
+- budget and claim-count updates; and
+- pause/close/time-window guards.
 
-## RewardRouter
+## RewardRouter anonymizer
 
-- Only owner may authorize/revoke campaigns.
-- Unauthorized campaigns and non-campaign callers cannot settle.
-- Zero commitments and amounts are rejected.
-- Valid settlement emits only campaign, commitment, amount, and note identifier metadata.
+- only configured privacy pool may call;
+- campaign/token/pool are constructor-pinned;
+- campaign reward is measured by balance delta;
+- zero output and overflow fail closed;
+- pool approval equals the exact output; and
+- exactly one upstream `OpenNoteDeposit` is returned.
 
-Run with:
+Run from `contracts/`:
 
 ```text
-snforge test --manifest-path contracts/Scarb.toml
+scarb build
+snforge test
 ```
-
-Status: pending until Starknet Foundry is installed; no test pass is claimed yet.

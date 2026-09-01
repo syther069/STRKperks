@@ -20,6 +20,8 @@ export function TransactionTimeline() {
         return <Clock className="w-4 h-4 text-status-warning shrink-0 animate-spin" />;
       case "rejected":
         return <XCircle className="w-4 h-4 text-status-error shrink-0" />;
+      case "simulated":
+        return <Activity className="w-4 h-4 text-brand-privacy shrink-0" />;
       default:
         return <XCircle className="w-4 h-4 text-status-error shrink-0" />;
     }
@@ -35,11 +37,16 @@ export function TransactionTimeline() {
           </h4>
         </div>
         <span className="text-[11px] font-mono text-fg-muted">
-          {transactions.length} Proofs Recorded
+          {transactions.length} Recorded Events
         </span>
       </div>
 
       <div className="divide-y divide-border/60">
+        {transactions.length === 0 && (
+          <p className="py-3 text-xs text-fg-muted">
+            No verified transactions recorded. Demo actions remain local until a wallet submits them.
+          </p>
+        )}
         {transactions.map((tx, idx) => (
           <div key={idx} className="py-3 first:pt-0 last:pb-0 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
@@ -61,7 +68,11 @@ export function TransactionTimeline() {
             )}
 
             <div className="flex items-center justify-between text-[11px] pt-0.5">
-              <ExplorerLink type="tx" value={tx.hash} label="View Starknet Explorer Proof" />
+              {tx.hash ? (
+                <ExplorerLink type="tx" value={tx.hash} label="View Starknet Explorer Transaction" />
+              ) : (
+                <span className="text-[11px] text-brand-privacy font-mono">Simulation only — no network transaction</span>
+              )}
               {tx.nullifier && (
                 <span className="text-fg-muted font-mono text-[10px] flex items-center gap-1">
                   <Lock className="w-3 h-3 text-brand-primary" /> Nullifier Consumed

@@ -10,10 +10,11 @@ pub trait ICampaignFactory<TContractState> {
 #[starknet::contract]
 mod CampaignFactory {
     use super::{ContractAddress, ICampaignFactory};
+    use core::num::traits::Zero;
     use starknet::storage::{Map, StoragePathEntry, StoragePointerReadAccess, StoragePointerWriteAccess};
     use starknet::event::EventEmitter;
     #[storage]
-    struct Storage { campaigns: Map<u32, ContractAddress>, count: u32 }
+    struct Storage { campaigns: Map<u32, ContractAddress>, registered: Map<ContractAddress, bool>, count: u32 }
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event { CampaignCreated: CampaignCreated }
@@ -22,9 +23,12 @@ mod CampaignFactory {
     #[abi(embed_v0)]
     impl Impl of ICampaignFactory<ContractState> {
         fn create_campaign(ref self: ContractState, campaign: ContractAddress) {
+            assert(campaign.is_non_zero(), 'INVALID_CAMPAIGN');
+            assert(!self.registered.entry(campaign).read(), 'CAMPAIGN_ALREADY_REGISTERED');
             let id = self.count.read();
             let owner = starknet::get_caller_address();
             self.campaigns.entry(id).write(campaign);
+            self.registered.entry(campaign).write(true);
             self.count.write(id + 1);
             self.emit(CampaignCreated { campaign_id: id.into(), campaign, owner });
         }

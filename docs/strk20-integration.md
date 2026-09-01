@@ -1,15 +1,28 @@
-# STRK20 integration status
+# STRK20 integration
 
-## Verified integration direction
+StrkPerks uses the Starknet Wallet API route for a user-facing dapp. The
+connected privacy wallet advertises Wallet API 0.10.3 or newer, prepares the
+STRK20 action batch, creates the proof, submits it, and later discovers the
+note. The browser does not hold the claimant's privacy keys.
 
-The official STRK20 examples specify a note-based privacy pool. Accounts register a viewing key before receiving private balances; deposits are public ERC-20 legs, while transfers inside the pool are private. Deposits are screening-gated and private operations are proven before atomic application.
+The batch contains an open-note `transfer` followed by an `invoke` of the
+StrkPerks anonymizer. Preparation resolves `${openNoteIds[0]}`. That exact note
+ID is included in the campaign owner's onchain approval. Submission prepares
+again with simulation and fails closed if the resolved note ID changed.
 
-For a user-facing dapp, the recommended route is the Starknet Wallet API. A private settlement is represented as a `transfer` action with `amount: "OPEN"` followed by an `invoke` action targeting an app-specific `privacy_invoke` helper. The wallet/prover owns viewing keys, note discovery, and proof submission. The helper must return `Span<OpenNoteDeposit>` and approve the pool to pull output funds.
+The Cairo helper uses `privacy::objects::OpenNoteDeposit` from the pinned
+`PRIVACY-0.14.3-RC.5` source tag. It is callable only by its configured pool,
+measures the ERC-20 balance delta around the campaign payout, approves exactly
+that amount to the pool, and returns one deposit.
 
-The Sepolia privacy-pool address documented by STRK20 by Example is:
+The current helper is an **UNAUDITED DRAFT** and must not be deployed as
+production code without independent review. Pool address, class hash, network,
+wallet support, fee behavior, and proving/discovery compatibility must be
+reverified from first-party sources at deployment time.
 
-`0x0254a6b2997ef52e9f830ce1f543f6b29768295e8d17e2267d672c552cfe0d91`
+Primary references:
 
-The existing `apps/web/lib/strk20/*` implementations are still demo simulations and fabricate hashes; they are not proof of live settlement. `apps/web/lib/strk20/client.ts` now exposes an isolated `invokePrivateActions` boundary that accepts only a wallet implementing `strk20InvokeTransaction`. Live wiring requires a STRK20-capable wallet (Wallet API >= 0.10.3), a verified helper contract, and configured proving/discovery services. Until those are configured, simulated behavior remains `Mocked for demo`.
-
-The Cairo `RewardRouter` is now a permissioned settlement-request boundary. It authorizes campaigns and rejects direct third-party settlement calls, but deliberately does not invent a pool ABI; the STRK20 Wallet API/private helper remains responsible for actual note creation.
+- [Starknet privacy overview](https://docs.starknet.io/build/starknet-privacy/overview)
+- [Starknet privacy architecture](https://docs.starknet.io/build/starknet-privacy/architecture)
+- [Privacy protocol source](https://github.com/starkware-libs/starknet-privacy)
+- [Starknet specifications releases](https://github.com/starkware-libs/starknet-specs/releases)

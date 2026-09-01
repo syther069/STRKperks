@@ -1,6 +1,6 @@
 import { deriveNullifier, deriveRecipientCommitment, toFelt } from "../lib/campaign/nullifier";
 import { generatePrivateRewardNote } from "../lib/strk20/notes";
-import { detectStrk20WalletApi } from "../lib/strk20/capabilities";
+import { buildPrivateClaimActions, extractPreparedOpenNoteId } from "../lib/strk20/walletActions";
 import { campaignFormSchema } from "../lib/validation/campaignSchema";
 import { parseTokenAmount } from "../lib/starknet/amounts";
 
@@ -43,12 +43,12 @@ async function runTests() {
   }
   console.log("✓ Test 3 Passed: Recipient commitment hashing verified.");
 
-  // Test 4: Private Reward Note Generation
+  // Test 4: Demo Receipt Fixture Generation
   const note = generatePrivateRewardNote("camp_test_1", "50.0", commitment);
   if (!note.noteHash || note.amountSTRK !== "50.0" || note.isSpent) {
     throw new Error("FAIL: Private note structure invalid");
   }
-  console.log("✓ Test 4 Passed: STRK20 private note generation verified.");
+  console.log("✓ Test 4 Passed: Demo receipt fixture generation verified.");
 
   // Test 5: Zod Campaign Validation
   const validData = {
@@ -84,13 +84,61 @@ async function runTests() {
   }
   console.log("✓ Test 7 Passed: Conversion ID felt encoding verified.");
 
-  const capability = await detectStrk20WalletApi({ supportedWalletApi: async () => ["0.10.3"] });
-  if (!capability.supported) throw new Error("FAIL: STRK20 capability detection rejected supported wallet");
-  const unsupported = await detectStrk20WalletApi({});
-  if (unsupported.supported) throw new Error("FAIL: STRK20 capability detection accepted unsupported wallet");
-  console.log("✓ Test 8 Passed: STRK20 Wallet API capability detection verified.");
+  const claimParams = {
+    anonymizerAddress: "0x222",
+    rewardToken: "0x333",
+    claimantAddress: "0x444",
+    conversionId: "conv_test_100",
+    nullifier: "0x555",
+    authorizationExpiry: "9999999999",
+  };
+  const actions = buildPrivateClaimActions(claimParams);
+  if (actions.length !== 2 || actions[0].type !== "transfer" || actions[1].type !== "invoke") {
+    throw new Error("FAIL: Private claim must contain one open-note transfer and one helper invoke");
+  }
+  console.log("✓ Test 8 Passed: STRK20 private-claim actions verified.");
 
-  console.log("\nAll 8 StrkPerks Protocol Checks Passed Successfully!");
+  const resolvedNoteId = "0x777";
+  const prepared = {
+    call: {
+      calldata: [
+        "0xdead",
+        toFelt(claimParams.conversionId),
+        claimParams.nullifier,
+        resolvedNoteId,
+        claimParams.authorizationExpiry,
+        "0xbeef",
+      ],
+    },
+  };
+  const extracted = extractPreparedOpenNoteId(prepared as never, claimParams);
+  if (extracted !== resolvedNoteId) {
+    throw new Error("FAIL: Prepared open-note ID was not bound to owner authorization");
+  }
+
+  let rejectedAmbiguous = false;
+  try {
+    extractPreparedOpenNoteId(
+      {
+        call: {
+          calldata: [
+            ...prepared.call.calldata,
+            toFelt(claimParams.conversionId),
+            claimParams.nullifier,
+            "0x778",
+            claimParams.authorizationExpiry,
+          ],
+        },
+      } as never,
+      claimParams,
+    );
+  } catch {
+    rejectedAmbiguous = true;
+  }
+  if (!rejectedAmbiguous) throw new Error("FAIL: Ambiguous note IDs must fail closed");
+  console.log("✓ Test 9 Passed: Prepared note binding fails closed on ambiguity.");
+
+  console.log("\nAll 9 StrkPerks Protocol Checks Passed Successfully!");
 }
 
 runTests();
