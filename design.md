@@ -1,618 +1,355 @@
-# design.md
-
 # StrkPerks Design System
 
-UI/UX guidelines and visual design standards for the StrkPerks application.
+## Status & Scope
 
-StrkPerks is a Starknet-native private rewards product. The interface should feel sharp, private, technical, and trustworthy. It should not look like a generic Web3 landing page. The design must prioritize clarity, transaction confidence, and judge-friendly demo flow.
+**Planned direction:** Signal Vault is the authoritative visual and interaction
+standard for StrkPerks. It defines the production product experience and the
+explicitly separated `/demo` experience.
+
+**Partially implemented:** the current Next.js app has a dark, dashboard-first
+shell, wallet controls, form components, transaction-state components, and
+some reduced-motion handling. Its existing surfaces, gradients, radii, and
+demo-backed product routes do not yet fully conform to this document.
+
+**Demo-only today:** synthetic campaigns, balances, transactions, receipts,
+and local claim outcomes. They must remain visibly simulated and must never be
+used as live proof.
+
+This document is a design standard, not evidence of a deployed contract,
+working privacy wallet, confirmed private note, or live STRK20 settlement.
 
 ---
 
-## 1. UI/UX Principles
+## 1. Product Design Brief
 
-### Core UX Goal
+StrkPerks is a Starknet-native reward-settlement product. It is not a
+marketing-first crypto site and not a generic DeFi dashboard. The interface is
+a **reward intelligence console**: an operational space where campaign owners
+can inspect reward capital, approvals, settlement state, and verifiable public
+evidence.
 
-Users should understand exactly what is happening at every step:
+The product should borrow the clarity, confidence, restrained motion, and data
+hierarchy of a strong command center without implying that AI participates in
+the protocol. Every claim about Starknet or STRK20 must be factual and
+verifiable.
 
-```txt
+The intended production flow is:
+
+```text
 Create campaign
-→ Fund with STRK20
-→ Approve conversion
-→ Settle private reward
-→ Block duplicate claim
-→ Show proof
-
-The product should feel like a serious protocol dashboard, not a marketing page.
-
-UX Rules
-Use a clean dashboard-first layout.
-Keep the main action visible on every important screen.
-Show transaction state clearly: idle, pending, confirmed, failed, rejected.
-Always show what is public and what is private.
-Avoid vague labels like Submit when a specific action is possible.
-Use direct labels like Create Campaign, Fund Campaign, Approve Conversion, Claim Reward.
-Do not overload users with protocol jargon.
-Use helper text only where it improves confidence.
-Keep the demo flow simple enough for a judge to understand in under 3 minutes.
-Mobile-First Rules
-Primary actions must be reachable on mobile without horizontal scrolling.
-Campaign cards must stack cleanly on small screens.
-Tables should become cards on mobile.
-Transaction timeline must remain readable on mobile.
-Wallet address should be shortened on mobile.
-Avoid tiny text below 12px.
-Accessibility Rules
-Maintain readable contrast.
-Use visible focus states.
-Buttons must have clear hover, active, disabled, and loading states.
-Do not rely only on color to show success or failure.
-Use labels for form inputs.
-Error messages must explain the fix, not just the problem.
-2. Visual Direction
-Design Personality
-
-StrkPerks should feel:
-
-Private
-Precise
-Founder-grade
-Starknet-native
-Technical but readable
-Calm, not noisy
-Premium without being flashy
-
-Avoid:
-
-Neon overload
-Purple-blue generic Web3 gradients
-Random glowing orbs
-Glassmorphism everywhere
-Cartoon crypto visuals
-Giant landing-page hero sections
-Fake AI dashboard clutter
-Over-rounded cards
-Too many shadows
-Layout Style
-
-Use a dense but clean protocol dashboard style.
-
-Preferred layout:
-
-Left sidebar on desktop
-Top wallet/action bar
-Main content panel
-Cards for repeated campaign items only
-Full-width sections for major views
-Transaction timeline on the right or below primary action
-Clear empty states
-3. Color & Theme
-
-The theme should be dark-first with a distinct Starknet/privacy identity.
-
-Primary Theme: Obsidian Citrus
-
-This is the main StrkPerks theme.
-
-Token	Color	Usage
-Background	#090A0A	Main app background
-Surface	#111313	Cards, panels
-Surface Raised	#181B1B	Modals, active cards
-Border	#2A2F2E	Panel borders
-Primary	#FF5A1F	Main CTA, Starknet action color
-Primary Hover	#E84C14	CTA hover
-Accent	#B7FF5A	Success highlights, reward signal
-Secondary Accent	#3CE7C7	Privacy/note indicators
-Text Primary	#F4F1EA	Main text
-Text Secondary	#A7ADA8	Supporting text
-Text Muted	#6F7772	Metadata
-Success	#7CFF8A	Confirmed state
-Warning	#FFD166	Pending/caution state
-Error	#FF5C5C	Failed/rejected state
-Why This Palette Works
-Black/charcoal gives the product a private protocol feel.
-Starknet-like orange creates ecosystem alignment.
-Acid green represents rewards without looking like generic DeFi.
-Cyan-teal represents shielded notes and privacy states.
-Warm off-white keeps text readable and less harsh than pure white.
-Light Theme: Ledger Paper
-
-Use only if light mode is implemented.
-
-Token	Color	Usage
-Background	#F7F4ED	Main background
-Surface	#FFFFFF	Cards, panels
-Surface Raised	#F1EDE3	Secondary panels
-Border	#D9D2C3	Dividers
-Primary	#D94313	Main CTA
-Primary Hover	#BA350C	CTA hover
-Accent	#617A00	Reward highlight
-Secondary Accent	#007C70	Privacy state
-Text Primary	#151515	Main text
-Text Secondary	#555D58	Supporting text
-Text Muted	#7C837E	Metadata
-Success	#16803A	Confirmed
-Warning	#A86B00	Pending
-Error	#B42318	Failed
-Color Usage Rules
-Primary orange is for main actions only.
-Accent green is for reward value, success, and positive settlement.
-Cyan/teal is for privacy-related UI: notes, shielded state, hidden recipient.
-Red is only for actual errors or rejected claims.
-Do not use gradients as the main design language.
-Do not create a one-color UI.
-Do not overuse glowing effects.
-4. Typography
-Font System
-
-Use a clean technical font pairing.
-
-Role	Font
-Primary UI Font	Inter
-Numeric / Code Font	JetBrains Mono
-Optional Display Font	Space Grotesk
-Font Usage
-Use Inter for most UI text.
-Use JetBrains Mono only for addresses, hashes, campaign IDs, transaction IDs, and numeric protocol data.
-Use Space Grotesk only for main product title or major page headers if needed.
-Type Scale
-Style	Size	Weight	Usage
-H1	32px	700	Main page title
-H2	24px	650	Section title
-H3	18px	600	Card title
-Body	15px	400	Normal text
-Body Small	13px	400	Supporting text
-Label	12px	600	Form labels, status labels
-Mono Data	13px	500	Address/hash/data
-Button	14px	600	Buttons
-Typography Rules
-Do not use oversized hero text inside dashboard cards.
-Keep line height comfortable: 1.45 to 1.6.
-Do not use negative letter spacing.
-Use uppercase only for small labels, not paragraphs.
-Keep wallet addresses and hashes in monospace.
-Avoid mixing more than two font families in the UI.
-5. Components
-Buttons
-
-Button types:
-
-Primary: main action
-Secondary: less important action
-Ghost: navigation or low-priority action
-Danger: destructive or rejected action
-
-Button rules:
-
-Primary buttons use orange.
-Disabled buttons must clearly look disabled.
-Loading buttons should show spinner and action text.
-Button text must be specific.
-
-Good examples:
-
-Create Campaign
-Fund Campaign
-Approve Conversion
-Claim Reward
-View Explorer
-Retry Transaction
-
-Bad examples:
-
-Submit
-Go
-Continue without context
-Click Here
-Cards
-
-Use cards only for:
-
-Campaign items
-Stats
-Transaction proof
-Recipient receipt
-Claim state
-Empty states
-
-Card style:
-
-Border radius: 8px
-Border: 1px solid #2A2F2E
-Background: #111313
-Avoid heavy shadows
-Avoid nested cards
-Forms
-
-Form rules:
-
-Every input must have a label.
-Every required field must be clear.
-Validation should happen before wallet transaction.
-Use helpful errors.
-Use placeholders only as examples, not labels.
-Status Badges
-
-Status badges:
-
-Status	Color
-Active	Green
-Pending	Yellow
-Expired	Muted gray
-Closed	Gray
-Failed	Red
-Private	Cyan
-Shielded	Cyan
-Claimed	Green
-Duplicate Blocked	Red
-Transaction Timeline
-
-Every important transaction should show:
-
-Step name
-Current status
-Transaction hash if available
-Explorer link
-Error message if failed
-Retry option if recoverable
-6. Page Design Guidelines
-Dashboard Page
-
-Must include:
-
-Campaign overview stats
-Campaign list
-Main CTA: Create Campaign
-Wallet status
-Recent transactions
-Privacy model summary
-Create Campaign Page
-
-Must include:
-
-Campaign form
-Reward configuration
-Budget configuration
-Validation states
-Preview before transaction
-Create campaign transaction state
-Campaign Detail Page
-
-Must include:
-
-Campaign status
-Campaign budget
-Funding panel
-Conversion approval panel
-Claim count
-Duplicate claims blocked
-Explorer links
-Claim Page
-
-Must include:
-
-Campaign name
-Reward amount
-Claim status
-Wallet connection
-Privacy note explanation
-Claim button
-Recipient receipt after success
-Demo Page
-
-Must include:
-
-Step-by-step guided flow
-Judge proof panel
-Explorer links
-Duplicate claim demonstration
-STRK20 integration explanation
-7. Memory: UI Preferences
-
-These preferences should be remembered while building the product.
-
-Theme Preference
-Default theme: dark mode
-Primary design style: protocol dashboard
-Avoid generic Web3 gradients
-Avoid cartoonish visuals
-Avoid glassmorphism-heavy UI
-Layout Preference
-Desktop: sidebar + main content
-Mobile: bottom or top navigation
-Dashboard-first, not landing-page-first
-Cards only for repeated items and focused panels
-No nested cards
-Typography Preference
-UI font: Inter
-Data font: JetBrains Mono
-Optional display font: Space Grotesk
-Use medium and semibold weights for structure
-Avoid overly thin fonts
-Interaction Preference
-Clear transaction states
-Explorer links after every important transaction
-Plain-language privacy explanations
-Strong empty states
-Specific button labels
-8. Final Design Rule
-
-StrkPerks should not look like a template.
-
-It should look like a serious privacy rewards protocol built for Starknet builders.
-
-The best visual direction is:
-
-Dark protocol dashboard
-+ Starknet orange
-+ reward acid green
-+ privacy cyan
-+ restrained typography
-+ clear transaction proof
-
-```md
-# memory.md
-
-# StrkPerks Project Memory
-
-Project memory for tracking progress, decisions, current work, and important context.
-
-This file should help keep the project consistent across development sessions. Update it whenever a major decision is made, a feature is completed, or a blocker is discovered.
-
----
-
-## 1. Project Memory
-
-### Project Name
-
-`StrkPerks`
-
-### Product Summary
-
-StrkPerks is a Starknet-native private rewards and referral settlement product built with STRK20.
-
-It helps Web3 projects create private reward campaigns, fund them through STRK20, approve valid conversions, and settle rewards into recipient-owned private notes while preventing duplicate claims using campaign-scoped nullifiers.
-
-### Core Product Flow
-
-```txt
-Create campaign
-→ Fund campaign with STRK20
-→ Approve conversion
-→ Claim private reward
-→ Block duplicate claim
-→ Show transaction proof
-Main Users
-Starknet project teams
-Web3 communities
-Affiliates
-Contributors
-DAO members
-Hackathon judges reviewing the demo
-Current Product Positioning
-
-StrkPerks is not a generic rewards dashboard.
-
-It is a private reward settlement layer for Starknet communities using STRK20.
-
-2. Key Decisions
-Product Decisions
-Decision	Status	Notes
-Product name changed from GhostRewards to StrkPerks	Final	Better Starknet alignment
-MVP focuses on private rewards	Final	Avoid broad affiliate CRM scope
-Duplicate claim prevention is required	Final	Important for judge demo
-STRK20 must be core to settlement	Final	Not just branding
-Dashboard-first UX	Final	Better for protocol product
-Dark protocol theme	Final	Matches privacy/product identity
-Technical Decisions
-Decision	Status	Notes
-Frontend framework: Next.js	Planned	Use TypeScript
-Styling: Tailwind CSS	Planned	Keep design consistent
-Wallet: Starknet React + starknet.js	Planned	Starknet wallet support
-Contracts: Cairo	Planned	Starknet-native contracts
-Contract testing: Starknet Foundry	Planned	Required for nullifier tests
-Validation: Zod	Planned	Forms and payload validation
-Async state: TanStack Query	Planned	Transaction polling and caching
-Local UI state: Zustand	Planned	Lightweight state only
-Design Decisions
-Decision	Status	Notes
-Default theme: dark	Final	Obsidian Citrus palette
-Primary color: Starknet orange	Final	#FF5A1F
-Reward accent: acid green	Final	#B7FF5A
-Privacy accent: cyan-teal	Final	#3CE7C7
-UI font: Inter	Final	Clean and readable
-Data font: JetBrains Mono	Final	Addresses, hashes, numeric protocol data
-Avoid generic Web3 gradient design	Final	Product should feel serious
-3. What Happened
-
-Use this section to log major updates.
-
-Update Log
-2026-08-26
-Selected project idea: private rewards and referral settlement using STRK20.
-Original name was GhostRewards.
-Name changed to StrkPerks.
-PRD content created.
-Architecture document created.
-Project phases document created.
-Project rules document created.
-Design direction defined:
-Dark protocol dashboard
-Starknet orange
-Acid green reward accent
-Cyan privacy accent
-Inter + JetBrains Mono typography
-Completed Documents
-Document	Status
-PRD.md	Drafted
-ARCHITECTURE.md	Drafted
-phases.doc.md	Drafted
-rules.md	Drafted
-design.md	Drafted
-memory.md	Drafted
-4. Currently Working On
-
-Current focus:
-
-Preparing project documentation and implementation structure for StrkPerks.
-
-Active work items:
-
-Finalize project docs.
-Add docs into project folder.
-Prepare clean implementation prompt for coding agent.
-Start MVP implementation only after project docs and build plan are approved.
-
-Current priority:
-
-Build a narrow, complete, judge-ready MVP instead of a broad unfinished dashboard.
-5. Pending Work
-Documentation
-Review PRD for final product name: StrkPerks.
-Ensure all old GhostRewards references are replaced.
-Add final hackathon criteria alignment.
-Add STRK20 integration notes.
-Add demo script.
-Add deployment checklist.
-Development
-Initialize Next.js app.
-Set up Starknet wallet connection.
-Build dashboard layout.
-Build campaign creation flow.
-Write Cairo campaign contracts.
-Add nullifier registry.
-Add STRK20 settlement integration.
-Build claim page.
-Add transaction timeline.
-Add duplicate claim demo.
-Write tests.
-Deploy demo.
-Demo Preparation
-Prepare demo campaign.
-Prepare sample recipient flow.
-Prepare duplicate claim attempt.
-Prepare explorer links.
-Record short demo video.
-Finalize README.
-6. Blockers And Risks
-Current Risks
-Risk	Impact	Mitigation
-STRK20 docs/API uncertainty	High	Verify against official docs before implementation
-Privacy overclaiming	High	Clearly explain privacy boundaries
-Too much scope	High	Focus only on one settlement flow
-Contract complexity	Medium	Keep Cairo contracts small and testable
-Wallet compatibility	Medium	Choose one reliable Starknet wallet flow for demo
-Demo instability	High	Create a guided demo page and test repeatedly
-Important Rule
-
-Do not claim a feature is implemented unless it exists in code and can be demonstrated.
-
-Use these labels in docs when needed:
-
-Implemented
-Planned
-Mocked for demo
-Out of scope for MVP
-7. Project Standards To Remember
-Engineering Standards
-Use TypeScript.
-Use Cairo for contracts.
-Use strict validation.
-Keep modules small.
-Keep contract logic separate from UI.
-Keep STRK20 logic inside dedicated helper files.
-Do not store secrets in frontend state or local storage.
-Do not hardcode contract addresses in components.
-UX Standards
-Dashboard-first product.
-Clear transaction states.
-Clear wallet states.
-Specific CTA labels.
-Plain-language privacy model.
-No generic crypto template UI.
-No fake metrics unless labeled as demo data.
-Submission Standards
-
-Final hackathon submission must include:
-
-Live app
-Public repo
-Deployed contracts
-Starknet explorer links
-Demo video
-README
-PRD
-Architecture
-Design system
-Rules
-Phases
-STRK20 integration explanation
-Privacy model
-8. Next Steps
-
-Recommended next work order:
-
-Replace all old GhostRewards references with StrkPerks.
-Add all documentation files to the project.
-Create the frontend app structure.
-Set up Starknet wallet connection.
-Build campaign dashboard.
-Implement Cairo campaign contracts.
-Implement nullifier registry.
-Connect STRK20 private settlement flow.
-Build claim page and recipient receipt.
-Add duplicate claim rejection demo.
-Test and deploy.
-9. Purpose Of This File
-
-This file keeps project context accurate across work sessions.
-
-Use it to:
-
-Remember decisions.
-Track what has been completed.
-Track what is currently being built.
-Avoid repeating old work.
-Avoid changing direction without reason.
-Keep product, design, and engineering decisions consistent.
-
-Update this file whenever the project changes in a meaningful way.
-
----
-
-## 9. Frontend Design Skills Usage
-
-StrkPerks should use high-quality frontend design guidance from Skills.sh to avoid generic AI-generated UI and maintain a professional product experience.
-
-### Required Skills.sh References
-
-Use the following frontend design skills as design guidance before implementing or reviewing the UI:
-
-| Skill | Purpose |
-|---|---|
-| `frontend-design` | Improve layout, spacing, hierarchy, component structure, and interaction quality |
-| `web-design-guidelines` | Apply strong web design principles for usability, accessibility, responsiveness, and visual polish |
-| `anti-ui-slop` | Prevent generic AI UI patterns, weak spacing, random gradients, fake dashboard clutter, and low-quality visual decisions |
-| `design-taste-frontend` | Improve visual taste, typography, color balance, product feel, and overall UI judgment |
-
-### Suggested Skill Sources
-
-```txt
-https://www.skills.sh/anthropics/skills/frontend-design
-https://www.skills.sh/vercel-labs/agent-skills/web-design-guidelines
-https://www.skills.sh/site/uizze.com/anti-ui-slop
-https://www.skills.sh/leonxlnx/taste-skill/design-taste-frontend
-
-
-10. Final Memory Note
-
-The strongest version of StrkPerks is not a large product with many unfinished features.
-
-The strongest version is a polished, working privacy rewards demo:
-
-Campaign created
-→ STRK20 funding shown
-→ Conversion approved
-→ Private reward settled
-→ Duplicate claim blocked
-→ Starknet proof displayed 
-
+-> Public ERC-20 approval
+-> Fund reward pool
+-> Approve exact conversion
+-> Submit private reward settlement
+-> Prevent duplicate claim
+-> Verify on Starknet
+```
+
+Funding is public. Only a successfully verified STRK20 settlement may be
+described as creating a private note.
+
+## 2. Design North Star: Signal Vault
+
+StrkPerks should feel deliberate, private, technically credible, and calm
+under transaction pressure. It is premium through precision rather than
+decoration: a compact financial operations console with a protocol-aware
+evidence layer.
+
+The signature motif is a low-contrast **Signal Field**: fine routed lines,
+small coordinates, or a constrained settlement shimmer. Use it only behind
+content in a dashboard empty state, page-level loading state, judge proof
+panel, or confirmed claim receipt. It must not carry information, interfere
+with contrast, or become a full-page wallpaper.
+
+Do not use blurred blobs, floating orbs, noisy particles, stock 3D objects,
+purple-blue Web3 auroras, rainbow borders, decorative CTA gradients, excessive
+glass, or cards inside cards.
+
+## 3. Product Truth & State Language
+
+The interface must make the next action obvious and show the protocol rather
+than treating it as a mystery box.
+
+- Use `Draft` -> `Funded` -> `Approvals ready` -> `Claimed` -> `Verified` only
+  where an authoritative state source supports the label.
+- Use `Submitted` only after a wallet returns a real transaction hash.
+- Use `Confirmed` only after Starknet receipt confirmation and any required
+  state or event refresh.
+- Use `Private note created` only when a supported STRK20 wallet reports an
+  actual note result.
+- Use `Simulation` or `Mocked for demo` persistently for synthetic data and
+  local outcomes. Synthetic hashes never receive explorer links.
+- Do not call a mocked result `private`, `shielded`, or `verified`.
+
+Prefer plain operator language: `Reward pool`, `Settlement status`, and
+`Duplicate claim blocked`. Put terms such as `nullifier` and `commitment` in a
+secondary technical row with concise explanations.
+
+Every transactional view should answer without scrolling:
+
+1. What campaign is this?
+2. What is ready now?
+3. What happens after this action?
+4. What evidence will be available?
+
+## 4. Layout Architecture
+
+The production shell uses a stable navigation rail, compact command bar, and
+fluid work surface. On large screens the rail is `240px` and the command bar
+is `64px`; forms retain a constrained reading width. An evidence rail may show
+transaction progress, proof rows, or contextual help when the task requires
+it.
+
+```text
+Left rail     Product identity, navigation, campaign context
+Command bar   Network, wallet, global action, account menu
+Work surface  Page title, current state, dominant action, working data
+Evidence rail Transaction progress, proof, privacy disclosure, recovery
+```
+
+- Tablet: collapse the rail while preserving labels on hover and focus.
+- Mobile: use a top app bar and fixed primary navigation above the safe area.
+- Reflow tables into labelled rows on small screens; do not require horizontal
+  scrolling for a primary flow.
+- Use spacing, grouping, and dividers before adding a panel. A panel must
+  frame a real object, decision, or action.
+- Do not introduce a separate landing-page visual language. The first route is
+  a useful operations surface.
+
+## 5. Color System
+
+Dark mode, **Signal Vault**, is the reference implementation.
+
+| Token | Value | Purpose |
+| --- | --- | --- |
+| `canvas` | `#0A0D0D` | Application background |
+| `surface` | `#111616` | Main panel and control surface |
+| `surface-raised` | `#171D1C` | Active panel, modal, expanded state |
+| `surface-inset` | `#0D1110` | Code, hashes, technical data |
+| `border-subtle` | `#27302E` | Default separation |
+| `border-strong` | `#3C4844` | Focused or selected separation |
+| `text-primary` | `#F3F1EA` | Primary content |
+| `text-secondary` | `#B4BDB7` | Supporting content |
+| `text-muted` | `#77817B` | Metadata |
+| `action` | `#FF6A38` | Decisive action |
+| `action-hover` | `#FF8358` | Action hover |
+| `action-pressed` | `#D64B21` | Action pressed |
+| `reward` | `#C8FA63` | Reward value and confirmed settlement |
+| `privacy` | `#50DCC5` | Privacy and proof context |
+| `pending` | `#F6C85F` | Awaiting confirmation |
+| `danger` | `#F06A6A` | Failure or rejected claim |
+| `info` | `#79B7FF` | Neutral protocol information |
+
+Persimmon changes state; lime denotes value or confirmed success; cyan denotes
+privacy/proof context; red denotes failure or rejection. Do not use color as
+the sole status signal. Essential text and controls must meet WCAG AA contrast.
+
+**Planned light theme:** Paper Ledger, a warm technical ledger rather than an
+inverted dark interface. It begins only after Signal Vault is complete.
+
+| Token | Value |
+| --- | --- |
+| `canvas` | `#F6F4EE` |
+| `surface` | `#FFFFFF` |
+| `surface-raised` | `#EEEDE6` |
+| `surface-inset` | `#E8E8E0` |
+| `border-subtle` | `#D5D8CD` |
+| `text-primary` | `#19201D` |
+| `text-secondary` | `#59635D` |
+| `text-muted` | `#7A837D` |
+| `action` | `#D85228` |
+| `reward` | `#50730B` |
+| `privacy` | `#007F70` |
+| `pending` | `#9A6300` |
+| `danger` | `#B83939` |
+
+## 6. Typography, Spacing & Data
+
+| Role | Font | Use |
+| --- | --- | --- |
+| Interface | Inter | Navigation, labels, body, forms, buttons |
+| Display | Space Grotesk | Page titles and key value moments only |
+| Protocol data | JetBrains Mono | Addresses, hashes, IDs, code-like states |
+
+| Style | Size / line height | Weight | Use |
+| --- | --- | --- | --- |
+| Page title | `32px / 40px` | 650–700 | One per page |
+| Section title | `20px / 28px` | 650 | Major group |
+| Panel title | `16px / 24px` | 600 | Panel header |
+| Body | `15px / 24px` | 400 | Default prose |
+| Supporting | `13px / 20px` | 400–500 | Help and metadata |
+| Label | `12px / 16px` | 600 | Inputs and column labels |
+| Mono data | `13px / 20px` | 500 | Hashes, amounts, proof data |
+
+Use sentence case. Never use negative letter spacing. Reserve display text for
+page titles and key amounts, use tabular numerals for data columns, and align
+numeric columns right. Truncate long addresses visually but always provide copy
+and a hover/focus method to reveal the full value.
+
+The spacing scale should support dense, operational work without crowding:
+`8`, `12`, `16`, `24`, `32`, `48`, and `64px`. Prefer a divider or an inset
+over a nested card. Panels use an `8px` radius; controls use `6px`; pills are
+only for compact status or filters.
+
+## 7. Components & Interaction
+
+### Buttons
+
+| Variant | Purpose | Treatment |
+| --- | --- | --- |
+| Primary | One decisive page action | Persimmon fill, dark text, `40px` minimum height |
+| Secondary | Supporting action | Raised surface with strong border |
+| Tertiary | Low-emphasis action | Text with subtle hover surface |
+| Danger | Irreversible action or recovery | Restrained red; never the default |
+| Icon | Familiar utility | Labelled icon, tooltip, visible focus ring |
+
+Use specific outcome labels: `Create campaign`, `Fund reward pool`, `Approve
+conversion`, `Claim reward`, `View transaction`, and `Retry claim`. A pending
+button keeps its original action label, adds a compact spinner, and prevents a
+duplicate request.
+
+### Status, Proof & Timeline
+
+Status requires an icon, words, and a color signal.
+
+| Condition | Required copy |
+| --- | --- |
+| Awaiting receipt | `Pending on Starknet` |
+| Confirmed receipt and state | `Confirmed` |
+| Privacy capability available | `Privacy-aware` |
+| Demo data/action | `Mocked for demo` or `Simulation` |
+| Verified replay evidence | `Duplicate claim blocked` |
+| Campaign disabled | `Paused` or `Closed` |
+
+A proof row contains a semantic label, plain-language status, compact
+monospace identifier when real public data exists, copy action, and explorer
+link only for a real hash/address. It includes a privacy annotation when a
+value is intentionally unavailable.
+
+Use a vertical timeline for multi-step work. Each node has state icon, title,
+timestamp or relative state, short detail, hash when submitted, and a recovery
+action. Name pending work: `Waiting for wallet confirmation`, `Submitting to
+Starknet`, or `Waiting for block confirmation`; do not leave a permanent vague
+loader.
+
+### Forms, Empty States & Errors
+
+- Associate every input with a visible label and concise requirements.
+- Validate before wallet interaction and show the correction beside the field.
+- Show a review step with amount, asset, recipient privacy boundary, and fee
+  implications before a write.
+- Put advanced protocol fields behind a named disclosure, never an unexplained
+  icon.
+- Empty campaign list: explain the absence and offer `Create campaign`.
+- Wallet disconnected: state why a wallet is needed and offer `Connect wallet`.
+- Wrong network: name the required Starknet network and offer `Switch network`.
+- Failed transaction: explain the failure, retain the submitted hash when one
+  exists, and provide a recovery action.
+
+## 8. Page Blueprints
+
+### Dashboard: Reward Operations
+
+One primary action: `Create campaign`. Show live campaign health, a prioritized
+campaign list, recent settlement activity, and one concise privacy-boundary
+disclosure. Never manufacture metrics. In demo mode, label the entire data
+source as simulated.
+
+### Campaign Detail: Settlement Workspace
+
+Show campaign identity, status, asset, owner, and explorer link when verified.
+Lead with the reward-pool value and remaining amount; use a single changing
+action area for fund, approve, pause, or review. Pair the conversion queue
+with a settlement timeline and proof rows.
+
+### Create Campaign: Configuration Flow
+
+Use a single-column form plus persistent desktop review panel. Group fields as
+`Campaign`, `Reward pool`, and `Claim rules`; show the transaction preview and
+the public/private boundary. After a live creation, show only the returned
+address and transaction evidence. A simulation is explicitly `Mocked for
+demo`.
+
+### Claim: Recipient Moment
+
+Keep focus on campaign, reward amount, eligibility, wallet capability,
+privacy boundary, and claim action. Explain `client-side secret`, public app
+nullifier, and wallet-reported STRK20 result distinctly. Completion is a
+receipt with amount, status, evidence, and duplicate-claim rule—not a
+celebratory splash screen.
+
+### Activity & Docs
+
+Activity is an evidence list of real submitted/confirmed transactions on
+production routes. Docs explain current protocol boundaries, deployment state,
+and recovery steps in plain language.
+
+### Judge Demo
+
+`/demo` is a guided proof narrative, not a disguised product surface. It shows
+what is implemented, mocked, public, and private at every stage. Its sequence
+is create, fund, approve, submit, evidence, replay attempt, and rejection. A
+synthetic step never generates explorer proof.
+
+## 9. Motion, Responsive Behaviour & Accessibility
+
+- Use `160–220ms` ease-out transitions for controls and surfaces; motion only
+  confirms state, directs attention, or preserves orientation.
+- Respect `prefers-reduced-motion`; no meaning may depend on animation.
+- Do not use looping decorative motion, parallax, springy cards, or confetti.
+- Start mobile as one column, then add rail and evidence column progressively.
+- Preserve primary actions above mobile safe areas and use `44px` minimum touch
+  targets.
+- Use semantic landmarks, keyboard navigation, visible `:focus-visible`
+  outlines, associated labels, accessible names for icon controls, and text
+  plus icon for destructive/security/transaction actions.
+- Support empty, loading, error, disabled, selected, expanded, and recovery
+  states. Do not depend solely on hover.
+
+## 10. Product/Demo Boundary
+
+**Planned production routes** are `/`, `/campaigns`, `/campaigns/create`,
+`/campaigns/[address]`, `/claim/[campaignAddress]`, `/activity`, and `/docs`.
+They may use only a connected Starknet wallet, deployed addresses, live RPC
+reads, real hashes, confirmed receipts, authentic STRK20 capabilities, and
+verified explorer links.
+
+**Current gap:** several existing product routes import the demo Zustand store
+and fixture data. Until that is removed, those routes must be treated as
+demo-backed, not production evidence.
+
+`/demo` must retain persistent Simulation labeling, an isolated store and
+feature module, and an `Open live product` exit. Production components may not
+import demo fixtures, local balances, synthetic wallets, receipts, hashes, or
+claim-success logic. Unsupported STRK20 capability shows an unsupported-wallet
+state; it never falls back to a fake settlement.
+
+## 11. Review Gate
+
+Before a major UI change and after implementation, review the affected surface
+using these skills and the applicable repository code:
+
+| Skill | Review purpose |
+| --- | --- |
+| `frontend-design` | Subject-specific hierarchy, flow, component vocabulary, and responsive states |
+| `web-design-guidelines` | Semantic controls, focus, labels, contrast, motion, and usability fundamentals |
+| `anti-ui-slop` | Product-specific density, restraint, honest empty states, and removal of stock patterns |
+| `ui-ux-pro-max` | Accessibility, touch, responsive, typography, color, and feedback checks |
+| `redesign-existing-projects` | Targeted refinement without breaking established behavior |
+
+The review passes only when the first viewport identifies the operator’s next
+action; all data sources are honest; every transaction has a named state,
+error meaning, and evidence path; privacy language matches the active
+integration; the system avoids generic Web3 decoration; and the mobile and
+keyboard paths remain complete.
+
+## 12. Final Standard
+
+StrkPerks should look like a focused Starknet protocol product that understands
+financial consequence. Its premium quality comes from information clarity,
+disciplined signals, honest proof, and a visual language owned by the product.
+
+Do not ship fake AI insights, fake metrics, fake scores, decorative Web3
+gradients, glowing orbs, excessive glassmorphism, nested cards, ambiguous
+actions, or a claim receipt that implies a real note when the result is
+simulated.
