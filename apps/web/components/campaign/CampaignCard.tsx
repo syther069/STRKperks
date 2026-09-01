@@ -24,7 +24,7 @@ export function CampaignCard({ campaign, featured = false }: CampaignCardProps) 
 
   return (
     <motion.article
-      className="group h-full"
+      className={featured ? "group" : "group h-full"}
       whileHover={prefersReducedMotion ? undefined : { y: -2 }}
       transition={{ type: "spring", stiffness: 360, damping: 28, mass: 0.72 }}
     >

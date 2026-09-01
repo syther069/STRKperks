@@ -1,21 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "StrkPerks | Starknet-Native Private Rewards & Referral Settlement",
@@ -31,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-bg text-fg-primary antialiased flex min-h-dvh flex-col`}
+        className={`${GeistSans.variable} ${GeistMono.variable} bg-bg text-fg-primary antialiased flex min-h-dvh flex-col`}
       >
         <WalletProvider>
           <Navbar />
