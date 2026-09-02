@@ -3,27 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --font-geist-sans: 'Geist', sans-serif;
-  --font-geist-mono: 'Geist Mono', monospace;
-
-  /* Obsidian Citrus Design Tokens */
-  --bg-app: #090A0A;
-  --surface: #111313;
-  --surface-raised: #181B1B;
-  --surface-subtle: #141716;
-  --border: #2A2F2E;
-  --border-hover: #3E4543;
-  --border-focus: #FF5A1F;
-  --primary: #FF5A1F;
-  --primary-hover: #E84C14;
-  --reward-accent: #B7FF5A;
-  --privacy-accent: #3CE7C7;
-  --text-primary: #F4F1EA;
-  --text-secondary: #A7ADA8;
-  --text-muted: #6F7772;
-  --success: #7CFF8A;
-  --warning: #FFD166;
-  --error: #FF5C5C;
+  --font-interface: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-protocol: "JetBrains Mono", ui-monospace, monospace;
+  --bg-app: #0A0D0D;
+  --surface: #111616;
+  --surface-raised: #171D1C;
+  --surface-subtle: #0D1110;
+  --border: #27302E;
+  --border-hover: #3C4844;
+  --border-focus: #FF6A38;
+  --primary: #FF6A38;
+  --primary-hover: #FF8358;
+  --reward-accent: #C8FA63;
+  --privacy-accent: #50DCC5;
+  --text-primary: #F3F1EA;
+  --text-secondary: #B4BDB7;
+  --text-muted: #77817B;
+  --success: #C8FA63;
+  --warning: #F6C85F;
+  --error: #F06A6A;
 }
 
 html {
@@ -33,23 +32,11 @@ html {
 body {
   background-color: var(--bg-app);
   color: var(--text-primary);
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-interface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100dvh;
   position: relative;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.72'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
 }
 
 :focus-visible {

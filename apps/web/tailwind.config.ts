@@ -11,56 +11,44 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          DEFAULT: "#090A0A",
-          surface: "#111313",
-          raised: "#181B1B",
-          subtle: "#141716",
+          DEFAULT: "#0A0D0D",
+          surface: "#111616",
+          raised: "#171D1C",
+          subtle: "#0D1110",
         },
         border: {
-          DEFAULT: "#2A2F2E",
-          hover: "#3E4543",
-          focus: "#FF5A1F",
+          DEFAULT: "#27302E",
+          hover: "#3C4844",
+          focus: "#FF6A38",
         },
         brand: {
-          primary: "#FF5A1F",
-          "primary-hover": "#E84C14",
+          primary: "#FF6A38",
+          "primary-hover": "#FF8358",
           "primary-subtle": "#2B170E",
-          reward: "#B7FF5A",
+          reward: "#C8FA63",
           "reward-subtle": "#1B290F",
-          privacy: "#3CE7C7",
+          privacy: "#50DCC5",
           "privacy-subtle": "#0F2825",
         },
         status: {
-          success: "#7CFF8A",
-          warning: "#FFD166",
-          error: "#FF5C5C",
+          success: "#C8FA63",
+          warning: "#F6C85F",
+          error: "#F06A6A",
         },
         fg: {
-          primary: "#F4F1EA",
-          secondary: "#A7ADA8",
-          muted: "#6F7772",
+          primary: "#F3F1EA",
+          secondary: "#B4BDB7",
+          muted: "#77817B",
         },
       },
       fontFamily: {
-        sans: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
-        display: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+        display: ["Space Grotesk", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
         card: "8px",
         btn: "6px",
-      },
-      boxShadow: {
-        glow:
-          "inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 5px rgba(68,22,7,0.46), 0 14px 32px -16px rgba(255,90,31,0.52)",
-        "glow-reward":
-          "inset 0 1px 0 rgba(255,255,255,0.16), 0 2px 5px rgba(20,38,7,0.5), 0 14px 32px -16px rgba(183,255,90,0.42)",
-        "glow-privacy":
-          "inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 5px rgba(5,35,31,0.54), 0 14px 32px -16px rgba(60,231,199,0.4)",
-        panel:
-          "inset 0 1px 0 rgba(255,255,255,0.055), inset 0 -1px 0 rgba(0,0,0,0.38), 0 3px 10px rgba(0,0,0,0.2), 0 26px 70px -38px rgba(255,90,31,0.22)",
-        "card-hover":
-          "inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 18px -10px rgba(0,0,0,0.8), 0 24px 48px -24px rgba(255,90,31,0.3)",
       },
     },
   },

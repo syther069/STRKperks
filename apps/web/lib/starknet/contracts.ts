@@ -3,12 +3,11 @@ import { CONTRACT_ADDRESSES } from "../utils/constants";
 import { toFelt } from "../campaign/nullifier";
 
 export type CampaignConfig = {
-  owner: string;
-  rewardToken: string;
   rewardAmount: string;
   maxClaims: string;
   startTime: string;
   endTime: string;
+  salt: string;
 };
 
 function requireAddress(address: string, name: string): string {
@@ -16,11 +15,11 @@ function requireAddress(address: string, name: string): string {
   return address;
 }
 
-export function buildFactoryCreateCall(campaignAddress: string): Call {
+export function buildFactoryCreateCall(config: CampaignConfig): Call {
   return {
     contractAddress: requireAddress(CONTRACT_ADDRESSES.campaignFactory, "CampaignFactory"),
     entrypoint: "create_campaign",
-    calldata: [campaignAddress],
+    calldata: [config.rewardAmount, config.maxClaims, config.startTime, config.endTime, config.salt],
   };
 }
 
@@ -51,6 +50,19 @@ export function buildApproveClaimCall(
   };
 }
 
+export function buildCancelClaimCall(
+  campaignAddress: string,
+  conversionId: string,
+  nullifier: string,
+  noteId: string,
+  authorizationExpiry: string,
+): Call {
+  return {
+    ...buildApproveClaimCall(campaignAddress, conversionId, nullifier, noteId, authorizationExpiry),
+    entrypoint: "cancel_claim",
+  };
+}
+
 export function buildConfigureAnonymizerCall(
   campaignAddress: string,
   anonymizerAddress: string,
@@ -60,4 +72,8 @@ export function buildConfigureAnonymizerCall(
     entrypoint: "configure_anonymizer",
     calldata: [requireAddress(anonymizerAddress, "Reward anonymizer")],
   };
+}
+
+export function buildCampaignCall(campaignAddress: string, entrypoint: string, calldata: string[] = []): Call {
+  return { contractAddress: campaignAddress, entrypoint, calldata };
 }

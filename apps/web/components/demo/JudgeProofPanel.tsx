@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { useDemoStore } from "../../lib/store/demoStore";
+import { useDemoStore } from "../../features/demo/store";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { PrivacyBadge, StatusBadge } from "../ui/Badge";
 import { ExplorerLink } from "./ExplorerLink";
 import { shortenAddress, shortenHash, formatSTRK } from "../../lib/utils/format";
-import { CONTRACT_ADDRESSES, DEMO_CAMPAIGN_ID, DEMO_CONVERSION_ID, DEMO_RECIPIENT_SECRET } from "../../lib/utils/constants";
+import { CONTRACT_ADDRESSES } from "../../lib/utils/constants";
+import { DEMO_CAMPAIGN_ID, DEMO_CONVERSION_ID, DEMO_RECIPIENT_SECRET } from "../../features/demo/constants";
 import { deriveNullifier, deriveRecipientCommitment } from "../../lib/campaign/nullifier";
 import {
   ShieldCheck,
@@ -18,9 +19,7 @@ import {
   CheckCircle2,
   Lock,
   FileCode,
-  Sparkles,
 } from "lucide-react";
-import confetti from "canvas-confetti";
 
 export function JudgeProofPanel() {
   const {
@@ -62,36 +61,32 @@ export function JudgeProofPanel() {
           nullifierNamespace: "demo_ekubo_q1",
         });
         setStepResult(res);
-        confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
         setDemoStep(3);
       } else if (demoStep === 3) {
         const res = await fundCampaign(demoCampaign.id, "2500.0");
         setStepResult(res);
-        confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
         setDemoStep(4);
       } else if (demoStep === 4) {
         const commitment = deriveRecipientCommitment("seed_judge_demo_user");
         const res = await approveConversion({
           campaignId: demoCampaign.id,
-          conversionId: "conv_judge_verified_01",
+          conversionId: "conv_judge_fixture_01",
           recipientCommitment: commitment,
           rewardTier: "Hackathon Evaluation",
           recipientSecret: "seed_judge_demo_user",
         });
         setStepResult(res);
-        confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
         setDemoStep(5);
       } else if (demoStep === 5) {
         const res = await claimReward({
           campaignId: demoCampaign.id,
-          conversionId: "conv_judge_verified_01",
+          conversionId: "conv_judge_fixture_01",
           recipientSecret: "seed_judge_demo_user",
         });
         setStepResult(res);
-        confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
         setDemoStep(6);
       } else if (demoStep === 6) {
-        const res = await attemptDuplicateClaim(demoCampaign.id, "conv_judge_verified_01", "seed_judge_demo_user");
+        const res = await attemptDuplicateClaim(demoCampaign.id, "conv_judge_fixture_01", "seed_judge_demo_user");
         setStepResult(res);
         setDemoStep(7);
       } else if (demoStep === 7) {
@@ -183,7 +178,7 @@ export function JudgeProofPanel() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-fg-muted">Conversion ID:</span>
-              <span className="text-fg-primary">conv_judge_verified_01</span>
+              <span className="text-fg-primary">conv_judge_fixture_01</span>
             </div>
             <div className="flex justify-between">
               <span className="text-fg-muted">Recipient Commitment:</span>

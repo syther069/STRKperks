@@ -26,11 +26,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-btn transition-[color,background-color,border-color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none motion-reduce:transition-none";
+      "inline-flex items-center justify-center font-medium rounded-btn transition-[color,background-color,border-color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none motion-reduce:transition-none";
 
     const variantStyles = {
       primary:
-        "bg-brand-primary text-fg-primary hover:bg-brand-primary-hover shadow-glow",
+        "bg-brand-primary text-bg hover:bg-brand-primary-hover",
       secondary:
         "bg-bg-raised text-fg-primary border border-border hover:border-border-hover hover:bg-bg-subtle",
       ghost:
@@ -38,9 +38,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       danger:
         "bg-status-error/15 text-status-error border border-status-error/30 hover:bg-status-error/25",
       reward:
-        "bg-brand-reward text-bg font-semibold hover:bg-brand-reward/90 shadow-glow-reward",
+        "bg-brand-reward text-bg font-semibold hover:bg-brand-reward/90",
       privacy:
-        "bg-brand-privacy-subtle text-brand-privacy border border-brand-privacy/40 hover:bg-brand-privacy/20 shadow-glow-privacy",
+        "bg-brand-privacy-subtle text-brand-privacy border border-brand-privacy/40 hover:bg-brand-privacy/20",
     };
 
     const sizeStyles = {

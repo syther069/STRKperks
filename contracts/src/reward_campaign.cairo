@@ -11,6 +11,14 @@ pub trait IRewardCampaign<TContractState> {
         note_id: felt252,
         authorization_expiry: u64,
     );
+    fn cancel_claim(
+        ref self: TContractState,
+        conversion_id: felt252,
+        nullifier: felt252,
+        note_id: felt252,
+        authorization_expiry: u64,
+    );
+    fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
     fn claim_reward(
         ref self: TContractState,
         conversion_id: felt252,
@@ -23,6 +31,16 @@ pub trait IRewardCampaign<TContractState> {
     fn close(ref self: TContractState);
     fn withdraw_unspent(ref self: TContractState, recipient: ContractAddress, amount: u128);
     fn get_budget(self: @TContractState) -> u128;
+    fn get_owner(self: @TContractState) -> ContractAddress;
+    fn get_reward_token(self: @TContractState) -> ContractAddress;
+    fn get_nullifier_registry(self: @TContractState) -> ContractAddress;
+    fn get_reward_amount(self: @TContractState) -> u128;
+    fn get_claimed_count(self: @TContractState) -> u32;
+    fn get_max_claims(self: @TContractState) -> u32;
+    fn get_start_time(self: @TContractState) -> u64;
+    fn get_end_time(self: @TContractState) -> u64;
+    fn is_paused(self: @TContractState) -> bool;
+    fn is_closed(self: @TContractState) -> bool;
     fn get_anonymizer(self: @TContractState) -> ContractAddress;
     fn get_claim_commitment(
         self: @TContractState,
@@ -90,6 +108,8 @@ mod RewardCampaign {
         AnonymizerConfigured: AnonymizerConfigured,
         Funded: Funded,
         ClaimApproved: ClaimApproved,
+        ClaimCancelled: ClaimCancelled,
+        OwnershipTransferred: OwnershipTransferred,
         RewardClaimed: RewardClaimed,
         CampaignPaused: CampaignPaused,
         CampaignResumed: CampaignResumed,
@@ -113,6 +133,10 @@ mod RewardCampaign {
         conversion_id: felt252,
         authorization_expiry: u64,
     }
+    #[derive(Drop, starknet::Event)]
+    struct ClaimCancelled { claim_commitment: felt252, conversion_id: felt252 }
+    #[derive(Drop, starknet::Event)]
+    struct OwnershipTransferred { previous_owner: ContractAddress, new_owner: ContractAddress }
 
     #[derive(Drop, starknet::Event)]
     struct RewardClaimed {
@@ -237,6 +261,30 @@ mod RewardCampaign {
             );
         }
 
+        fn cancel_claim(
+            ref self: ContractState,
+            conversion_id: felt252,
+            nullifier: felt252,
+            note_id: felt252,
+            authorization_expiry: u64,
+        ) {
+            only_owner(@self);
+            let commitment = claim_commitment(
+                @self, conversion_id, nullifier, note_id, authorization_expiry,
+            );
+            assert(self.approvals.entry(commitment).read(), 'CLAIM_NOT_APPROVED');
+            self.approvals.entry(commitment).write(false);
+            self.emit(ClaimCancelled { claim_commitment: commitment, conversion_id });
+        }
+
+        fn transfer_ownership(ref self: ContractState, new_owner: ContractAddress) {
+            only_owner(@self);
+            assert(new_owner.is_non_zero(), 'INVALID_OWNER');
+            let previous_owner = self.owner.read();
+            self.owner.write(new_owner);
+            self.emit(OwnershipTransferred { previous_owner, new_owner });
+        }
+
         fn claim_reward(
             ref self: ContractState,
             conversion_id: felt252,
@@ -307,6 +355,17 @@ mod RewardCampaign {
         fn get_budget(self: @ContractState) -> u128 {
             self.budget.read()
         }
+
+        fn get_owner(self: @ContractState) -> ContractAddress { self.owner.read() }
+        fn get_reward_token(self: @ContractState) -> ContractAddress { self.reward_token.read() }
+        fn get_nullifier_registry(self: @ContractState) -> ContractAddress { self.nullifier_registry.read() }
+        fn get_reward_amount(self: @ContractState) -> u128 { self.reward_amount.read() }
+        fn get_claimed_count(self: @ContractState) -> u32 { self.claimed.read() }
+        fn get_max_claims(self: @ContractState) -> u32 { self.max_claims.read() }
+        fn get_start_time(self: @ContractState) -> u64 { self.start_time.read() }
+        fn get_end_time(self: @ContractState) -> u64 { self.end_time.read() }
+        fn is_paused(self: @ContractState) -> bool { self.paused.read() }
+        fn is_closed(self: @ContractState) -> bool { self.closed.read() }
 
         fn get_anonymizer(self: @ContractState) -> ContractAddress {
             self.anonymizer.read()

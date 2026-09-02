@@ -9,11 +9,11 @@ This document defines the target production architecture and records the reposit
 | Area | Status | Current truth |
 | --- | --- | --- |
 | Cairo campaign, registry, factory, router source | **Implemented** | Source and Foundry tests exist; the router is marked unaudited. |
-| Wallet API adapter | **Partially implemented** | A narrow `starknet-strk20` alias prepares/submits actions and checks Wallet API `0.10.3+`. |
-| Verified current deployment and manifest | **Blocked** | No verified current-source deployment record exists. |
+| Wallet API adapter | **Implemented locally; network proof blocked** | A narrow `starknet-strk20` alias checks Wallet API `0.10.3+`, prepares/submits actions, records hashes, and requests balances only with user action. |
+| Verified current deployment and manifest | **Tooling implemented; deployment blocked** | Generation and independent verification scripts exist, but no verified current-source manifest exists. |
 | STRK20 claim, note discovery, replay proof | **Blocked** | Requires a capable wallet, current pool configuration, funded accounts, and accepted transactions. |
-| Authoritative production routes | **Planned** | Root, campaign, and claim routes still use demo Zustand state and fixtures. |
-| Demo isolation | **Partially implemented** | `/demo` exists, but demo modules are still imported by product routes. |
+| Authoritative production routes | **Implemented locally** | Production routes use configured factory/RPC state and fail closed when deployment configuration is absent. |
+| Demo isolation | **Implemented locally** | Fixtures and Zustand state are isolated under `features/demo`; lint and tests reject production imports. |
 
 The production application must never fabricate a wallet, transaction hash, campaign balance, note ID, contract state, explorer evidence, or private-note outcome.
 
@@ -49,15 +49,13 @@ Production uses connected wallets, verified deployed addresses, live RPC reads, 
 | STRK20 pool | Calls router and credits returned open-note deposit | Private payout destination |
 | Explorer | Independent public transaction inspection | Human-verifiable public evidence |
 
-**Not implemented:** an offchain approval service. The current approval API fails closed with HTTP `501`; campaign owners approve via onchain `RewardCampaign.approve_claim`.
+**Intentional boundary:** there is no offchain approval service. Campaign owners approve or cancel the exact public tuple directly through `RewardCampaign`.
 
 ## Onchain Components
 
 ### CampaignFactory
 
-**Implemented:** `create_campaign` registers a non-zero, unregistered campaign address and exposes index/count lookup. It emits the registered campaign and caller.
-
-**Planned:** factory-owned deployment, configuration validation, campaign metadata, and production discovery through verified events. The current factory does not deploy a campaign or prove a registered address has the expected class.
+**Implemented locally:** the factory pins reviewed campaign/router class hashes plus registry, pool, and token configuration. `create_campaign` validates rules, atomically deploys and wires a campaign/router pair, transfers campaign ownership to the caller, indexes both addresses, and emits their configuration. Deployment proof is still blocked.
 
 ### RewardCampaign
 
@@ -65,7 +63,7 @@ Production uses connected wallets, verified deployed addresses, live RPC reads, 
 
 Funding measures balance before/after `transfer_from`; only received tokens increase budget. Closed campaigns permit owner-only unspent-fund withdrawal.
 
-**Planned:** full public configuration/lifecycle reads and a deployment-proven campaign discovery model. A local fixture ID is not a production campaign.
+**Implemented locally:** public configuration/lifecycle getters and factory-indexed RPC discovery. A verified live deployment remains required before these reads become network evidence.
 
 ### NullifierRegistry
 
@@ -118,7 +116,7 @@ campaign owner wallet
   -> refresh confirmed campaign state
 ```
 
-Funding is public. The current UI can build an approval/funding wallet multicall when live configuration is enabled. Production must show each submitted hash and confirmed state, or accurately describe a supported multicall. Funding is not STRK20 shielding.
+Funding is public. The UI submits ERC-20 approval first, waits for acceptance, then submits campaign funding and refreshes campaign state. It records both hashes. If funding fails after approval, the owner can explicitly set the remaining allowance to zero. Funding is not STRK20 shielding.
 
 ## Client Architecture
 
@@ -130,7 +128,7 @@ Funding is public. The current UI can build an approval/funding wallet multicall
 | Wallet discovery | Wallet Standard/discovery `6.0.2` | Capability-driven compatible wallet selection |
 | Validation | Zod schemas | Validate all public payloads before writes |
 | Server state | TanStack Query provider | Live reads, invalidation, receipt recovery |
-| Local state | Zustand demo store | Presentation-only product state; isolated demo store |
+| Local state | Persisted nonsensitive transaction recovery plus isolated demo Zustand store | Same |
 | Contract testing | Foundry test source | Pinned reproducible toolchain and passing suite |
 
 The wallet owns keys, viewing material, proof creation, note discovery, and authorization. The app may receive a connected address, chain ID, capability metadata, public authorization fields, wallet hash, and public receipt/event data; it must not log or persist private wallet material.
@@ -152,7 +150,7 @@ validate input
   -> show Confirmed only after verification
 ```
 
-**Current gap:** there is no complete live read model, authoritative route data model, or durable transaction recovery. Existing timeout waits do not replace receipt tracking and post-confirmation query invalidation.
+**Implemented locally:** TanStack Query reads factory-indexed campaigns and lifecycle state; submitted hashes enter a persistent transaction store; Activity resumes pending/unknown receipts; accepted writes invalidate Starknet queries. This is local implementation evidence, not proof against a deployed network.
 
 ## Product & Demo Isolation
 
@@ -174,23 +172,19 @@ These routes may render only connected wallet state, deployed addresses, live RP
 
 `/demo` requires persistent `Simulation` labeling, isolated fixtures/state, no production analytics, no synthetic explorer links, and a live-product exit.
 
-**Current gap:** `useDemoStore` and fixtures appear in root, campaign, claim, navigation, and wallet components; `/api/campaigns` and `/api/conversions` also return local fixtures. Until refactored, all affected product routes are demo-backed.
-
-**Required enforcement:** prevent product/lib imports from demo modules; use `source: "starknet" | "simulation"` at shared boundaries; reject simulated records in explorer and verified-proof components; never fall back from an unsupported STRK20 wallet to fake success.
+**Implemented locally:** demo state/fixtures live under `features/demo`, fixture APIs were removed, production routes have no demo imports, synthetic hashes cannot produce explorer URLs, and unsupported privacy wallets fail closed. ESLint plus the standalone web checks enforce the import boundary.
 
 ## Deployment & Verification
 
-**Implemented:** `contracts/run_deployment.sh` builds, declares, deploys, and wires registry/factory/campaign/router contracts, then writes public addresses and class hashes to ignored `deployed_addresses.env`. It refuses non-Sepolia input and a mainnet-looking RPC URL.
+**Implemented locally:** `contracts/run_deployment.sh` refuses dirty source and non-Sepolia RPCs, uses an isolated build directory, waits for declarations/deployments, and emits a pending machine-readable manifest containing commit, tools, classes, addresses, constructor arguments, transaction hashes, configuration, and explorer base URL. `contracts/verify_deployment.sh` independently rebuilds source class hashes, checks deployed classes, receipt success, ownership, token/registry/pool/router wiring, and factory state before marking it verified. Environment export refuses pending manifests.
 
-**Blocked/Planned:** retain a machine-readable manifest with network/chain ID, RPC environment name without credentials, git commit, build timestamp, Scarb/compiler versions, class hashes, addresses, constructor arguments, declaration/deployment/wiring hashes, configuration, and explorer base URL.
-
-A verifier must read deployed contracts, match class hashes/pinned dependencies, and fail on configuration drift. Environment values do not prove deployment. No script may invent an address or continue after a failed onchain operation.
+**Blocked:** no real verified manifest has been produced. Environment values do not prove deployment, and no script invents an address or continues after failed verification.
 
 ## Security Invariants & Tests
 
 The test suite must prove owner-only administration/funding; pool-only router entry; router-only payout; approval failure when a bound field or expiry changes; campaign-scoped app-nullifier single use and isolation; atomic reversion; budget limits; exact balance delta/allowance/deposit; lifecycle rejections; and no private material in events/errors.
 
-**Current evidence:** Foundry test source and a matrix exist. Repository docs report 24 tests, but submission requires a rerun on a pinned compatible Cairo/Scarb toolchain and the actual result. Documentation is not a substitute for passing tests.
+**Current local evidence:** 43 Starknet Foundry tests pass with Scarb/Cairo `2.20.1` and Starknet Foundry `0.63.0`, covering factory wiring, lifecycle, owner controls, approval binding/cancellation, funding deltas/overflow, budget and claim limits, token/approval rollback, router output, nullifier isolation, and replay. This is still not an independent audit or live deployment proof.
 
 ## Acceptance Evidence Before Submission
 

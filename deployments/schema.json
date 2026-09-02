@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StrkPerks deployment manifest",
+  "type": "object",
+  "required": ["schemaVersion", "network", "chainId", "gitCommit", "toolVersions", "explorerBaseUrl", "deployer", "privacyPool", "rewardToken", "rewardTokenDecimals", "classHashes", "addresses", "constructorArguments", "transactions", "campaignConfig", "verification"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "network": { "const": "sepolia" },
+    "chainId": { "const": "SN_SEPOLIA" },
+    "gitCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "deployer": { "$ref": "#/$defs/felt" },
+    "privacyPool": { "$ref": "#/$defs/felt" },
+    "rewardToken": { "$ref": "#/$defs/felt" },
+    "rewardTokenDecimals": { "const": 18 },
+    "classHashes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/felt" } },
+    "addresses": { "type": "object", "additionalProperties": { "$ref": "#/$defs/felt" } },
+    "constructorArguments": { "type": "object" },
+    "toolVersions": { "type": "object", "required": ["scarb", "sncast"], "additionalProperties": { "type": "string" } },
+    "explorerBaseUrl": { "type": "string", "format": "uri" },
+    "transactions": { "type": "object" },
+    "campaignConfig": { "type": "object", "required": ["rewardAmount", "maxClaims", "startTime", "endTime", "salt"] },
+    "verification": { "type": "object", "required": ["status"], "properties": { "status": { "enum": ["pending", "verified", "failed"] } } }
+  },
+  "$defs": { "felt": { "type": "string", "pattern": "^0x[0-9a-fA-F]{1,64}$" } }
+}

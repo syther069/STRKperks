@@ -1,154 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
-import { useDemoStore } from "../../lib/store/demoStore";
-import { Campaign } from "../../lib/types";
-import { Card } from "../ui/Card";
-import { Button } from "../ui/Button";
-import { Input } from "../ui/Input";
-import { PrivacyBadge } from "../ui/Badge";
-import { formatSTRK, shortenHash } from "../../lib/utils/format";
-import { getExplorerTxUrl } from "../../lib/starknet/explorer";
-import { ShieldCheck, ArrowDownCircle, ExternalLink, CheckCircle2 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { useState } from "react";
+import { useAccount } from "@starknet-react/core";
+import type { Campaign } from "../../lib/types";
 import { useContractActions } from "../../lib/starknet/useContractActions";
-import { CONTRACT_ADDRESSES, LIVE_CONTRACTS_ENABLED } from "../../lib/utils/constants";
+import { getExplorerTxUrl } from "../../lib/starknet/explorer";
+import { formatSTRK, shortenHash } from "../../lib/utils/format";
+import { Button } from "../ui/Button";
+import { Card } from "../ui/Card";
+import { Input } from "../ui/Input";
 
-export interface FundingPanelProps {
-  campaign: Campaign;
-}
-
-export function FundingPanel({ campaign }: FundingPanelProps) {
-  const { fundCampaign } = useDemoStore();
-  const live = useContractActions();
-  const [amount, setAmount] = useState("1000.0");
-  const [isFunding, setIsFunding] = useState(false);
-  const [successTx, setSuccessTx] = useState<string | null>(null);
+export function FundingPanel({ campaign }: { campaign: Campaign }) {
+  const actions = useContractActions();
+  const { address: connectedAddress } = useAccount();
+  const isOwner = Boolean(connectedAddress && BigInt(connectedAddress) === BigInt(campaign.ownerAddress));
+  const [amount, setAmount] = useState("");
+  const [stage, setStage] = useState<"idle" | "approving" | "funding">("idle");
+  const [hashes, setHashes] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  const handleFund = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      setError("Please enter a valid funding amount");
-      return;
-    }
-
-    setError(null);
-    setIsFunding(true);
+  const address = campaign.contractAddress || campaign.id;
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault(); setError(null); setHashes([]); setStage("approving");
     try {
-      const res = LIVE_CONTRACTS_ENABLED
-        ? CONTRACT_ADDRESSES.rewardCampaign
-          ? { txHash: await live.fundCampaign(CONTRACT_ADDRESSES.rewardCampaign, amount) }
-          : (() => { throw new Error("Configured live campaign address is missing"); })()
-        : await fundCampaign(campaign.id, amount);
-      setSuccessTx(res.txHash);
-      confetti({
-        particleCount: 50,
-        spread: 50,
-        origin: { y: 0.7 },
-        colors: ["#3CE7C7", "#B7FF5A"],
+      const result = await actions.fundCampaign(address, amount, (next, hash) => {
+        setStage(next); if (hash) setHashes((current) => current.includes(hash) ? current : [...current, hash]);
       });
-    } catch (err: any) {
-      setError(err.message || "Failed to fund campaign");
-    } finally {
-      setIsFunding(false);
-    }
+      setHashes(result.hashes);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Funding failed"); }
+    finally { setStage("idle"); }
   };
-
-  return (
-    <Card variant="shielded" className="space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-brand-privacy/20">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded bg-brand-privacy-subtle text-brand-privacy">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-fg-primary">
-              {LIVE_CONTRACTS_ENABLED ? "STRK Treasury Funding" : "Public Treasury Funding (Demo)"}
-            </h4>
-            <p className="text-[11px] text-fg-secondary">
-              {LIVE_CONTRACTS_ENABLED ? "Fund the deployed campaign budget onchain." : "Simulate the public ERC-20 funding leg."}
-            </p>
-          </div>
-        </div>
-        <PrivacyBadge type="shielded" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 p-3 rounded bg-bg-raised/80 border border-border text-xs font-mono">
-        <div>
-          <span className="text-[11px] text-fg-muted uppercase tracking-wider block font-sans">
-            Total Allocated Budget
-          </span>
-          <span className="text-sm font-bold text-fg-primary mt-0.5 block">
-            {formatSTRK(campaign.totalBudget)} STRK
-          </span>
-        </div>
-        <div>
-          <span className="text-[11px] text-fg-muted uppercase tracking-wider block font-sans">
-            Available for Settlement
-          </span>
-          <span className="text-sm font-bold text-brand-reward mt-0.5 block">
-            {formatSTRK(campaign.remainingBudget)} STRK
-          </span>
-        </div>
-      </div>
-
-      {successTx ? (
-        <div className="p-3 rounded bg-status-success/15 border border-status-success/30 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-medium text-status-success">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>{LIVE_CONTRACTS_ENABLED ? "Funding transaction accepted on Starknet L2! Campaign budget updated onchain." : "Demo funding recorded locally; no network transaction occurred."}</span>
-          </div>
-          <div className="flex items-center justify-between font-mono text-[11px] text-fg-secondary pt-1">
-            <span>Tx: {shortenHash(successTx, 8)}</span>
-            <a
-              href={getExplorerTxUrl(successTx)}
-              target="_blank"
-              rel="noreferrer"
-              className="text-brand-privacy hover:underline inline-flex items-center gap-1"
-            >
-              View Explorer <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full text-xs mt-1"
-            onClick={() => setSuccessTx(null)}
-          >
-            Deposit Additional STRK
-          </Button>
-        </div>
-      ) : (
-        <form onSubmit={handleFund} className="space-y-3">
-          <Input
-            label="Deposit Amount"
-            type="number"
-            step="10"
-            placeholder="500.0"
-            value={amount}
-            onChange={(e) => {
-              setAmount(e.target.value);
-              setError(null);
-            }}
-            error={error || undefined}
-            isMono
-            rightElement={<span className="text-xs font-bold text-fg-muted">STRK</span>}
-            helperText={LIVE_CONTRACTS_ENABLED ? "Onchain ERC20 transfer into the campaign treasury" : "Demo simulation; enable live contracts for wallet execution"}
-          />
-
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full"
-            isLoading={isFunding}
-            disabled={LIVE_CONTRACTS_ENABLED && !live.isReady}
-            leftIcon={<ArrowDownCircle className="w-4 h-4" />}
-          >
-            {LIVE_CONTRACTS_ENABLED && !live.isReady ? "Connect Wallet to Fund" : "Fund Campaign"}
-          </Button>
-        </form>
-      )}
-    </Card>
-  );
+  const cancelApproval = async () => {
+    setError(null); setStage("approving");
+    try {
+      const cancellationHash = await actions.cancelFundingApproval(address);
+      setHashes((current) => [...current, cancellationHash]);
+    }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Approval cancellation failed"); }
+    finally { setStage("idle"); }
+  };
+  return <Card className="space-y-5"><div><h2 className="font-semibold text-fg-primary">Fund reward pool</h2><p className="mt-1 text-xs leading-5 text-fg-secondary">Funding is public. Approval must confirm before the campaign pulls tokens.</p></div><dl className="grid grid-cols-2 gap-4 border-y border-border py-4 text-xs"><div><dt className="text-fg-muted">Available</dt><dd className="mt-1 font-mono text-brand-reward">{formatSTRK(campaign.remainingBudget)}</dd></div><div><dt className="text-fg-muted">Asset</dt><dd className="mt-1 font-mono text-fg-primary">{campaign.tokenSymbol}</dd></div></dl>
+    {error && <p className="rounded border border-status-error/30 bg-status-error/10 p-3 text-xs text-status-error" role="alert">{error}</p>}
+    {hashes.length > 0 && <ol className="space-y-2">{hashes.map((hash, index) => { const url = getExplorerTxUrl(hash); return <li key={hash} className="flex items-center justify-between rounded border border-border p-3 text-xs"><span>{index === 0 ? "Token approval" : "Campaign funding"}</span>{url && <a href={url} target="_blank" rel="noreferrer" className="font-mono text-brand-privacy">{shortenHash(hash, 6)}</a>}</li>; })}</ol>}
+    <form onSubmit={submit} className="space-y-3"><Input label="Funding amount" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="100" isMono rightElement={<span className="text-xs">{campaign.tokenSymbol}</span>} /><Button type="submit" className="w-full" disabled={!actions.isReady || !isOwner || stage !== "idle" || !amount} isLoading={stage !== "idle"}>{!actions.isReady || !isOwner ? "Connect campaign owner on Sepolia" : stage === "approving" ? "Confirming approval" : stage === "funding" ? "Confirming funding" : "Fund reward pool"}</Button></form>
+    {error && hashes.length === 1 && <Button variant="ghost" size="sm" disabled={stage !== "idle"} onClick={cancelApproval}>Set remaining token allowance to zero</Button>}
+  </Card>;
 }

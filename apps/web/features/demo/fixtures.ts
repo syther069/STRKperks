@@ -1,6 +1,6 @@
-import { Campaign, Conversion, ProtocolStats, TxRecord } from "../types";
-import { deriveNullifier, deriveRecipientCommitment } from "../campaign/nullifier";
-import { DEMO_RECIPIENT_SECRET } from "../utils/constants";
+import { Campaign, Conversion, ProtocolStats, TxRecord } from "../../lib/types";
+import { deriveNullifier, deriveRecipientCommitment } from "../../lib/campaign/nullifier";
+import { DEMO_RECIPIENT_SECRET } from "./constants";
 
 export const INITIAL_STATS: ProtocolStats = {
   totalCampaigns: 4,
@@ -16,6 +16,7 @@ export const INITIAL_CAMPAIGNS: Campaign[] = [
   {
     id: "camp_demo_1",
     isFixture: true,
+    source: "simulation",
     name: "Demo Developer Rewards",
     description: "Private referral rewards for developers.",
     ownerAddress: "0x01a93b482f018749ab8295c1029487fa92305819ad74e928",
@@ -37,6 +38,7 @@ export const INITIAL_CAMPAIGNS: Campaign[] = [
   {
     id: "camp_demo_2",
     isFixture: true,
+    source: "simulation",
     name: "Demo Volume Cashback",
     description: "Shielded volume cashback for simulated users.",
     ownerAddress: "0x028c249a9fb992ea407c74070a2569e12cb136423405c14ff18a7c29e19c0175",
@@ -58,6 +60,7 @@ export const INITIAL_CAMPAIGNS: Campaign[] = [
   {
     id: "camp_demo_3",
     isFixture: true,
+    source: "simulation",
     name: "Demo Concentrated LP Bounty",
     description: "Private settlement for simulated liquidity providers.",
     ownerAddress: "0x07f12a84a6c813d9642289668383a158ec2d439a2f643db815858cfd84e4448e",
@@ -79,6 +82,7 @@ export const INITIAL_CAMPAIGNS: Campaign[] = [
   {
     id: "camp_demo_4",
     isFixture: true,
+    source: "simulation",
     name: "Demo Contributor Grant",
     description: "Discreet protocol contributor grants simulation.",
     ownerAddress: "0x04a29a67a840e698889ecae693db383d47d4039328227b958cfa8fbfa9f1c7d2",
@@ -103,6 +107,7 @@ export const INITIAL_CONVERSIONS: Conversion[] = [
   {
     id: "conv_demo_referral_771",
     isFixture: true,
+    source: "simulation",
     campaignId: "camp_demo_1",
     recipientCommitment: deriveRecipientCommitment(DEMO_RECIPIENT_SECRET),
     rewardAmount: "50.0",
@@ -115,6 +120,7 @@ export const INITIAL_CONVERSIONS: Conversion[] = [
   {
     id: "conv_demo_referral_772",
     isFixture: true,
+    source: "simulation",
     campaignId: "camp_demo_1",
     // Deterministic local fixture; never presented as chain state.
     recipientCommitment: deriveRecipientCommitment("fixture_pending_user"),

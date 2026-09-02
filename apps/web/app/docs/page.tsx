@@ -3,7 +3,7 @@
 import React from "react";
 import { Card } from "@/components/ui/Card";
 import { PrivacyBadge } from "@/components/ui/Badge";
-import { PrivacyBoundaryMatrix } from "@/components/demo/PrivacyBoundaryMatrix";
+import { PrivacyBoundaryMatrix } from "@/components/docs/PrivacyBoundaryMatrix";
 import { CONTRACT_ADDRESSES } from "@/lib/utils/constants";
 import { getExplorerContractUrl } from "@/lib/starknet/explorer";
 import { shortenAddress } from "@/lib/utils/format";
@@ -76,7 +76,7 @@ export default function DocsPage() {
               <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] font-mono">
                 <span className="text-fg-muted">Address:</span>
                 <a
-                  href={getExplorerContractUrl(c.address)}
+                  href={getExplorerContractUrl(c.address) ?? undefined}
                   target="_blank"
                   rel="noreferrer"
                   className="text-brand-privacy hover:underline inline-flex items-center gap-1"

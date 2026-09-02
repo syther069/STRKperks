@@ -6,25 +6,24 @@ import { JudgeProofPanel } from "@/components/demo/JudgeProofPanel";
 import { PrivacyBoundaryMatrix } from "@/components/demo/PrivacyBoundaryMatrix";
 import { TransactionTimeline } from "@/components/demo/TransactionTimeline";
 import { Card } from "@/components/ui/Card";
-import { PrivacyBadge } from "@/components/ui/Badge";
-import { Sparkles, Shield, Lock, FileCheck, CheckCircle2 } from "lucide-react";
+import { Shield, Lock, FileCheck, CheckCircle2 } from "lucide-react";
 
 export default function DemoPage() {
   return (
     <div className="space-y-8">
       {/* Top Banner */}
-      <div className="p-6 rounded-card bg-gradient-to-r from-bg-surface via-bg-raised to-bg-surface border border-border space-y-2">
+      <div className="p-6 rounded-card bg-bg-surface border border-status-warning/40 space-y-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-brand-primary text-fg-primary">
             HACKATHON EVALUATION SURFACE
           </span>
-          <PrivacyBadge type="shielded" />
+          <span className="rounded border border-status-warning/40 px-2 py-0.5 text-xs font-mono text-status-warning">SIMULATION</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold font-display text-fg-primary tracking-tight">
           StrkPerks Interactive Protocol Walkthrough
         </h1>
         <p className="text-xs sm:text-sm text-fg-secondary max-w-3xl leading-relaxed">
-          This interactive test surface lets hackathon judges step through the intended rewards lifecycle: campaign deployment, simulated STRK20 adapter funding, simulated private settlement, and Cairo nullifier replay-attack blocking. Live contract actions are available on the campaign pages; adapter steps remain clearly labeled as simulated.
+          This local teaching surface models the intended lifecycle. Every campaign, balance, wallet, receipt, note, and replay outcome on this page is simulated and is not Starknet evidence.
         </p>
       </div>
 

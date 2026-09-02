@@ -1,94 +1,78 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${RPC_URL:?Set RPC_URL to a trusted Starknet RPC endpoint}"
-: "${NETWORK:=sepolia}"
+: "${RPC_URL:?Set RPC_URL to a trusted Starknet Sepolia endpoint}"
 : "${ACCOUNT:?Set ACCOUNT to a configured, deployed sncast account name}"
-: "${DEPLOYER_ADDRESS:?Set DEPLOYER_ADDRESS to the campaign owner address}"
-: "${PRIVACY_POOL_ADDRESS:?Set PRIVACY_POOL_ADDRESS from the current official privacy release}"
-: "${REWARD_TOKEN_ADDRESS:?Set REWARD_TOKEN_ADDRESS to the ERC-20 reward token}"
+: "${DEPLOYER_ADDRESS:?Set DEPLOYER_ADDRESS to the public owner address}"
+: "${PRIVACY_POOL_ADDRESS:?Set PRIVACY_POOL_ADDRESS from a verified release}"
+: "${REWARD_TOKEN_ADDRESS:?Set REWARD_TOKEN_ADDRESS to the supported ERC-20}"
+: "${REWARD_TOKEN_DECIMALS:?Set REWARD_TOKEN_DECIMALS after verifying the ERC-20 metadata}"
 
-if [[ "$NETWORK" != "sepolia" ]]; then
-  echo "Only Sepolia is supported by this deployment script; set NETWORK=sepolia." >&2
-  exit 1
-fi
-if [[ "$RPC_URL" =~ mainnet ]]; then
-  echo "Refusing a Sepolia deployment against a mainnet RPC URL." >&2
-  exit 1
-fi
+command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
+command -v curl >/dev/null || { echo "curl is required" >&2; exit 1; }
+[[ -z "$(git status --porcelain)" ]] || { echo "Refusing to deploy from a dirty worktree. Commit the reviewed source first." >&2; exit 1; }
+BUILD_TARGET="/tmp/strkperks-deploy-${PPID}-${RANDOM}-target"
+export SCARB_TARGET_DIR="$BUILD_TARGET"
+trap 'rm -rf -- "$BUILD_TARGET"' EXIT
+NETWORK="${NETWORK:-sepolia}"
+[[ "$NETWORK" == "sepolia" ]] || { echo "Only Sepolia is supported" >&2; exit 1; }
+[[ "$REWARD_TOKEN_DECIMALS" == "18" ]] || { echo "The current web client supports only 18-decimal reward tokens" >&2; exit 1; }
+[[ ! "$RPC_URL" =~ mainnet ]] || { echo "Refusing a mainnet RPC for Sepolia" >&2; exit 1; }
+CHAIN_ID=$(curl -fsS -H 'content-type: application/json' --data '{"jsonrpc":"2.0","id":1,"method":"starknet_chainId","params":[]}' "$RPC_URL" | jq -er '.result')
+[[ "${CHAIN_ID,,}" == "0x534e5f5345504f4c4941" ]] || { echo "RPC is not Starknet Sepolia: $CHAIN_ID" >&2; exit 1; }
 
 REWARD_AMOUNT="${REWARD_AMOUNT:-1000000000000000000}"
 MAX_CLAIMS="${MAX_CLAIMS:-100}"
 START_TIME="${START_TIME:-$(date +%s)}"
 END_TIME="${END_TIME:-$(date -d 'now + 30 days' +%s)}"
+SALT="${SALT:-0x$(date +%s%N)}"
+MANIFEST_PATH="${MANIFEST_PATH:-../deployments/sepolia/strkperks-$(date -u +%Y%m%dT%H%M%SZ).json}"
 
-extract_hex() {
-  echo "$1" | grep -m 1 -oE '0x[0-9a-fA-F]{60,66}' || true
+field() { jq -r "$2 // empty" <<<"$1"; }
+declare_class() {
+  local name="$1" output
+  output=$(sncast --json --wait --account "$ACCOUNT" declare --url "$RPC_URL" --contract-name "$name")
+  printf '%s' "$output"
 }
-
-declare_contract() {
-  local contract="$1"
+deploy_class() {
   local output
-  output=$(sncast --account "$ACCOUNT" declare --url "$RPC_URL" --contract-name "$contract")
-  echo "$output" >&2
-  extract_hex "$output"
+  output=$(sncast --json --wait --account "$ACCOUNT" deploy --url "$RPC_URL" "$@")
+  printf '%s' "$output"
 }
 
-deploy_contract() {
-  local output
-  output=$(sncast --wait --account "$ACCOUNT" deploy --url "$RPC_URL" "$@")
-  echo "$output" >&2
-  extract_hex "$output"
-}
-
-echo "Building and declaring the current contract sources"
 scarb build
-NULLIFIER_HASH=$(declare_contract "NullifierRegistry")
-FACTORY_HASH=$(declare_contract "CampaignFactory")
-CAMPAIGN_HASH=$(declare_contract "RewardCampaign")
-ROUTER_HASH=$(declare_contract "RewardRouter")
+REGISTRY_DECL=$(declare_class NullifierRegistry)
+CAMPAIGN_DECL=$(declare_class RewardCampaign)
+ROUTER_DECL=$(declare_class RewardRouter)
+FACTORY_DECL=$(declare_class CampaignFactory)
+REGISTRY_CLASS=$(field "$REGISTRY_DECL" '.class_hash')
+CAMPAIGN_CLASS=$(field "$CAMPAIGN_DECL" '.class_hash')
+ROUTER_CLASS=$(field "$ROUTER_DECL" '.class_hash')
+FACTORY_CLASS=$(field "$FACTORY_DECL" '.class_hash')
+for value in "$REGISTRY_CLASS" "$CAMPAIGN_CLASS" "$ROUTER_CLASS" "$FACTORY_CLASS"; do [[ "$value" =~ ^0x[0-9a-fA-F]+$ ]] || { echo "Invalid class hash" >&2; exit 1; }; done
 
-for required_hash in "$NULLIFIER_HASH" "$FACTORY_HASH" "$CAMPAIGN_HASH" "$ROUTER_HASH"; do
-  if [[ -z "$required_hash" ]]; then
-    echo "Could not extract a declared class hash; stop before deploying." >&2
-    exit 1
-  fi
-done
+REGISTRY_DEPLOY=$(deploy_class --class-hash "$REGISTRY_CLASS")
+REGISTRY_ADDRESS=$(field "$REGISTRY_DEPLOY" '.contract_address')
+FACTORY_DEPLOY=$(deploy_class --class-hash "$FACTORY_CLASS" --constructor-calldata "$CAMPAIGN_CLASS" "$ROUTER_CLASS" "$REGISTRY_ADDRESS" "$PRIVACY_POOL_ADDRESS" "$REWARD_TOKEN_ADDRESS")
+FACTORY_ADDRESS=$(field "$FACTORY_DEPLOY" '.contract_address')
 
-echo "Deploying registry, factory, campaign, and anonymizer"
-NULLIFIER_ADDR=$(deploy_contract --class-hash "$NULLIFIER_HASH")
-FACTORY_ADDR=$(deploy_contract --class-hash "$FACTORY_HASH")
-CAMPAIGN_ADDR=$(deploy_contract \
-  --class-hash "$CAMPAIGN_HASH" \
-  --constructor-calldata \
-  "$DEPLOYER_ADDRESS" "$REWARD_TOKEN_ADDRESS" "$NULLIFIER_ADDR" \
-  "$REWARD_AMOUNT" "$MAX_CLAIMS" "$START_TIME" "$END_TIME")
-ROUTER_ADDR=$(deploy_contract \
-  --class-hash "$ROUTER_HASH" \
-  --constructor-calldata "$PRIVACY_POOL_ADDRESS" "$CAMPAIGN_ADDR" "$REWARD_TOKEN_ADDRESS")
+CREATE_OUTPUT=$(sncast --json --wait --account "$ACCOUNT" invoke --url "$RPC_URL" --contract-address "$FACTORY_ADDRESS" --function create_campaign --calldata "$REWARD_AMOUNT" "$MAX_CLAIMS" "$START_TIME" "$END_TIME" "$SALT")
+CREATE_TX=$(field "$CREATE_OUTPUT" '.transaction_hash')
+RECEIPT=$(curl -fsS -H 'content-type: application/json' --data "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"starknet_getTransactionReceipt\",\"params\":[\"$CREATE_TX\"]}" "$RPC_URL")
+CAMPAIGN_ADDRESS=$(jq -r --arg factory "$FACTORY_ADDRESS" '.result.events[] | select((.from_address|ascii_downcase)==($factory|ascii_downcase)) | .data[0]' <<<"$RECEIPT" | head -n1)
+ROUTER_ADDRESS=$(jq -r --arg factory "$FACTORY_ADDRESS" '.result.events[] | select((.from_address|ascii_downcase)==($factory|ascii_downcase)) | .data[1]' <<<"$RECEIPT" | head -n1)
+for value in "$REGISTRY_ADDRESS" "$FACTORY_ADDRESS" "$CAMPAIGN_ADDRESS" "$ROUTER_ADDRESS" "$CREATE_TX"; do [[ "$value" =~ ^0x[0-9a-fA-F]+$ ]] || { echo "Deployment evidence extraction failed" >&2; exit 1; }; done
 
-if [[ -z "$NULLIFIER_ADDR" || -z "$FACTORY_ADDR" || -z "$CAMPAIGN_ADDR" || -z "$ROUTER_ADDR" ]]; then
-  echo "Could not extract every deployed address; stop before post-deployment wiring." >&2
-  exit 1
-fi
+mkdir -p "$(dirname "$MANIFEST_PATH")"
+jq -n \
+  --arg network "$NETWORK" --arg chainId "SN_SEPOLIA" --arg deployedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg gitCommit "$(git rev-parse HEAD)" \
+  --arg scarbVersion "$(scarb --version | head -n1)" --arg sncastVersion "$(sncast --version | head -n1)" --arg explorerBaseUrl "https://sepolia.voyager.online" \
+  --arg deployer "$DEPLOYER_ADDRESS" --arg pool "$PRIVACY_POOL_ADDRESS" --arg token "$REWARD_TOKEN_ADDRESS" --argjson tokenDecimals "$REWARD_TOKEN_DECIMALS" \
+  --arg registryClass "$REGISTRY_CLASS" --arg campaignClass "$CAMPAIGN_CLASS" --arg routerClass "$ROUTER_CLASS" --arg factoryClass "$FACTORY_CLASS" \
+  --arg registry "$REGISTRY_ADDRESS" --arg factory "$FACTORY_ADDRESS" --arg campaign "$CAMPAIGN_ADDRESS" --arg router "$ROUTER_ADDRESS" --arg createTx "$CREATE_TX" \
+  --arg registryDeclareTx "$(field "$REGISTRY_DECL" '.transaction_hash')" --arg campaignDeclareTx "$(field "$CAMPAIGN_DECL" '.transaction_hash')" --arg routerDeclareTx "$(field "$ROUTER_DECL" '.transaction_hash')" --arg factoryDeclareTx "$(field "$FACTORY_DECL" '.transaction_hash')" \
+  --arg registryDeployTx "$(field "$REGISTRY_DEPLOY" '.transaction_hash')" --arg factoryDeployTx "$(field "$FACTORY_DEPLOY" '.transaction_hash')" \
+  --arg rewardAmount "$REWARD_AMOUNT" --arg maxClaims "$MAX_CLAIMS" --arg startTime "$START_TIME" --arg endTime "$END_TIME" --arg salt "$SALT" \
+  '{schemaVersion:1,network:$network,chainId:$chainId,deployedAt:$deployedAt,gitCommit:$gitCommit,toolVersions:{scarb:$scarbVersion,sncast:$sncastVersion},explorerBaseUrl:$explorerBaseUrl,deployer:$deployer,privacyPool:$pool,rewardToken:$token,rewardTokenDecimals:$tokenDecimals,classHashes:{nullifierRegistry:$registryClass,campaignFactory:$factoryClass,rewardCampaign:$campaignClass,rewardRouter:$routerClass},addresses:{nullifierRegistry:$registry,campaignFactory:$factory,rewardCampaign:$campaign,rewardRouter:$router},constructorArguments:{nullifierRegistry:[],campaignFactory:[$campaignClass,$routerClass,$registry,$pool,$token],rewardCampaign:[$factory,$token,$registry,$rewardAmount,$maxClaims,$startTime,$endTime],rewardRouter:[$pool,$campaign,$token]},transactions:{declare:{nullifierRegistry:$registryDeclareTx,rewardCampaign:$campaignDeclareTx,rewardRouter:$routerDeclareTx,campaignFactory:$factoryDeclareTx},deploy:{nullifierRegistry:$registryDeployTx,campaignFactory:$factoryDeployTx},createCampaign:$createTx,wiring:$createTx},campaignConfig:{rewardAmount:$rewardAmount,maxClaims:$maxClaims,startTime:$startTime,endTime:$endTime,salt:$salt},verification:{status:"pending",verifiedAt:null,receipts:{}}}' > "$MANIFEST_PATH"
 
-echo "Applying one-time campaign wiring"
-sncast --wait --account "$ACCOUNT" invoke --url "$RPC_URL" \
-  --contract-address "$CAMPAIGN_ADDR" --function configure_anonymizer --calldata "$ROUTER_ADDR"
-sncast --wait --account "$ACCOUNT" invoke --url "$RPC_URL" \
-  --contract-address "$FACTORY_ADDR" --function create_campaign --calldata "$CAMPAIGN_ADDR"
-
-printf '%s\n' \
-  "NEXT_PUBLIC_NULLIFIER_REGISTRY_ADDRESS=$NULLIFIER_ADDR" \
-  "NEXT_PUBLIC_CAMPAIGN_FACTORY_ADDRESS=$FACTORY_ADDR" \
-  "NEXT_PUBLIC_REWARD_CAMPAIGN_ADDRESS=$CAMPAIGN_ADDR" \
-  "NEXT_PUBLIC_REWARD_ROUTER_ADDRESS=$ROUTER_ADDR" \
-  "NEXT_PUBLIC_REWARD_TOKEN_ADDRESS=$REWARD_TOKEN_ADDRESS" \
-  "NEXT_PUBLIC_STRK20_PRIVACY_POOL_ADDRESS=$PRIVACY_POOL_ADDRESS" \
-  "NULLIFIER_REGISTRY_CLASS_HASH=$NULLIFIER_HASH" \
-  "CAMPAIGN_FACTORY_CLASS_HASH=$FACTORY_HASH" \
-  "REWARD_CAMPAIGN_CLASS_HASH=$CAMPAIGN_HASH" \
-  "REWARD_ROUTER_CLASS_HASH=$ROUTER_HASH" \
-  > deployed_addresses.env
-
-echo "Deployment complete. Verify every address before enabling live mode; output: contracts/deployed_addresses.env"
+echo "Deployment submitted. Verify before enabling the web app: $MANIFEST_PATH"

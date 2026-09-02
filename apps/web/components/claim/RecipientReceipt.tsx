@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { ClaimReceipt } from "../../lib/types";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
-import { PrivacyBadge } from "../ui/Badge";
+import { PrivacyBadge, StatusBadge } from "../ui/Badge";
 import { formatSTRK, shortenHash } from "../../lib/utils/format";
 import { getExplorerTxUrl } from "../../lib/starknet/explorer";
 import { CheckCircle2, ShieldCheck, Copy, Check, ExternalLink, Lock } from "lucide-react";
@@ -44,26 +44,30 @@ export function RecipientReceipt({ receipt, onClose }: RecipientReceiptProps) {
             </h3>
             <p className="text-xs text-fg-secondary mt-0.5">
               {receipt.status === "submitted"
-                ? "Submitted to Starknet; wallet note discovery follows confirmation."
-                : "Private-note settlement recorded on Starknet."}
+                ? "Submitted to Starknet; confirmation is pending."
+                : receipt.shieldedBalanceVerified
+                  ? "Wallet balance evidence recorded after settlement."
+                  : "Public settlement accepted; wallet evidence is still pending."}
             </p>
           </div>
         </div>
-        <PrivacyBadge type="zk_note" />
+        {receipt.shieldedBalanceVerified ? <PrivacyBadge type="zk_note" /> : <StatusBadge status="pending" />}
       </div>
 
       {/* Amount Hero Box */}
       <div className="p-5 rounded-card bg-bg-surface/90 border border-border text-center space-y-1">
         <span className="text-[11px] text-fg-muted uppercase tracking-wider font-semibold">
-          Settled Reward Amount
+          Claim Amount
         </span>
         <div className="text-3xl font-black font-mono text-brand-reward tracking-tight">
           +{formatSTRK(receipt.rewardAmount)} {receipt.tokenSymbol}
         </div>
         <p className="text-xs text-brand-privacy font-medium">
           {receipt.status === "submitted"
-            ? "Transaction submitted; confirmation and note discovery are pending"
-            : "Private note created for the connected privacy wallet"}
+            ? "Transaction submitted; confirmation is pending"
+            : receipt.shieldedBalanceVerified
+              ? "Wallet reported a higher private balance"
+              : "Starknet accepted the public settlement transaction"}
         </p>
       </div>
 
@@ -78,7 +82,7 @@ export function RecipientReceipt({ receipt, onClose }: RecipientReceiptProps) {
 
         <div className="space-y-1 pb-2 border-b border-border/60">
           <div className="flex justify-between text-fg-muted font-sans">
-            <span>Open Note ID:</span>
+            <span>Authorized Open Note ID:</span>
             <button
               onClick={handleCopyNote}
               className="text-brand-privacy hover:underline inline-flex items-center gap-1 cursor-pointer"
@@ -112,7 +116,7 @@ export function RecipientReceipt({ receipt, onClose }: RecipientReceiptProps) {
           <span className="text-fg-muted font-sans">{receipt.txHash ? "Starknet Tx Hash:" : "Transaction status:"}</span>
           {receipt.txHash ? (
             <a
-              href={getExplorerTxUrl(receipt.txHash)}
+              href={getExplorerTxUrl(receipt.txHash) ?? undefined}
               target="_blank"
               rel="noreferrer"
               className="text-brand-privacy hover:underline inline-flex items-center gap-1 font-semibold"
@@ -138,7 +142,7 @@ export function RecipientReceipt({ receipt, onClose }: RecipientReceiptProps) {
       <div className="flex gap-3">
         {receipt.txHash && (
           <a
-            href={getExplorerTxUrl(receipt.txHash)}
+            href={getExplorerTxUrl(receipt.txHash) ?? undefined}
             target="_blank"
             rel="noreferrer"
             className="flex-1"

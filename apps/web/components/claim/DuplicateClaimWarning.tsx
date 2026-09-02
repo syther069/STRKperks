@@ -33,7 +33,7 @@ export function DuplicateClaimWarning({
               Replay Attack Rejected (Duplicate Claim Blocked)
             </h3>
             <p className="text-xs text-fg-secondary mt-0.5">
-              Starknet Smart Contract Reverted: Nullifier is already marked as consumed.
+              Review the evidence below to distinguish a rejected transaction from a simulation result.
             </p>
           </div>
         </div>
@@ -61,7 +61,7 @@ export function DuplicateClaimWarning({
           <div className="flex justify-between">
             <span className="text-fg-muted font-sans">Rejected Tx Hash:</span>
             <a
-              href={getExplorerTxUrl(txHash)}
+              href={getExplorerTxUrl(txHash) ?? undefined}
               target="_blank"
               rel="noreferrer"
               className="text-brand-privacy hover:underline inline-flex items-center gap-1"

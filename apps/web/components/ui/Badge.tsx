@@ -90,7 +90,7 @@ export interface PrivacyBadgeProps {
 export function PrivacyBadge({ type, className }: PrivacyBadgeProps) {
   const configs = {
     shielded: {
-      label: "STRK20 Shielded",
+      label: "Privacy-aware",
       icon: ShieldCheck,
       style: "bg-brand-privacy-subtle text-brand-privacy border-brand-privacy/40",
     },
@@ -105,7 +105,7 @@ export function PrivacyBadge({ type, className }: PrivacyBadgeProps) {
       style: "bg-brand-primary-subtle text-brand-primary border-brand-primary/40",
     },
     zk_note: {
-      label: "Private Note",
+      label: "Wallet-verified note",
       icon: ShieldCheck,
       style: "bg-brand-reward-subtle text-brand-reward border-brand-reward/40",
     },

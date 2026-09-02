@@ -6,10 +6,10 @@
 standard for StrkPerks. It defines the production product experience and the
 explicitly separated `/demo` experience.
 
-**Partially implemented:** the current Next.js app has a dark, dashboard-first
-shell, wallet controls, form components, transaction-state components, and
-some reduced-motion handling. Its existing surfaces, gradients, radii, and
-demo-backed product routes do not yet fully conform to this document.
+**Implemented locally:** the Next.js app now uses the dark mineral Signal Vault
+shell, stable desktop rail, compact command bar, restrained signal colors,
+proof-first transaction states, responsive layouts, and reduced-motion rules.
+Live deployment and wallet evidence remain separate external gates.
 
 **Demo-only today:** synthetic campaigns, balances, transactions, receipts,
 and local claim outcomes. They must remain visibly simulated and must never be
@@ -308,15 +308,16 @@ synthetic step never generates explorer proof.
 
 ## 10. Product/Demo Boundary
 
-**Planned production routes** are `/`, `/campaigns`, `/campaigns/create`,
+**Implemented production route structure:** `/`, `/campaigns`, `/campaigns/create`,
 `/campaigns/[address]`, `/claim/[campaignAddress]`, `/activity`, and `/docs`.
 They may use only a connected Starknet wallet, deployed addresses, live RPC
 reads, real hashes, confirmed receipts, authentic STRK20 capabilities, and
 verified explorer links.
 
-**Current gap:** several existing product routes import the demo Zustand store
-and fixture data. Until that is removed, those routes must be treated as
-demo-backed, not production evidence.
+**Implemented locally:** demo state and fixtures live under `features/demo`,
+production imports are blocked by ESLint and a standalone test, synthetic
+hashes cannot create explorer links, and production routes fail closed when
+verified configuration is absent.
 
 `/demo` must retain persistent Simulation labeling, an isolated store and
 feature module, and an `Open live product` exit. Production components may not

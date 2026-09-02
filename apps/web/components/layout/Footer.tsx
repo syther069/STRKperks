@@ -37,7 +37,7 @@ export function Footer() {
               <div className="flex justify-between">
                 <span className="text-fg-muted font-sans">CampaignFactory:</span>
                 <a
-                  href={getExplorerContractUrl(CONTRACT_ADDRESSES.campaignFactory)}
+                  href={getExplorerContractUrl(CONTRACT_ADDRESSES.campaignFactory) ?? undefined}
                   target="_blank"
                   rel="noreferrer"
                   className="text-brand-privacy hover:underline"
@@ -48,7 +48,7 @@ export function Footer() {
               <div className="flex justify-between">
                 <span className="text-fg-muted font-sans">NullifierRegistry:</span>
                 <a
-                  href={getExplorerContractUrl(CONTRACT_ADDRESSES.nullifierRegistry)}
+                  href={getExplorerContractUrl(CONTRACT_ADDRESSES.nullifierRegistry) ?? undefined}
                   target="_blank"
                   rel="noreferrer"
                   className="text-brand-privacy hover:underline"
@@ -59,7 +59,7 @@ export function Footer() {
               <div className="flex justify-between">
                 <span className="text-fg-muted font-sans">RewardRouter:</span>
                 <a
-                  href={getExplorerContractUrl(CONTRACT_ADDRESSES.rewardRouter)}
+                  href={getExplorerContractUrl(CONTRACT_ADDRESSES.rewardRouter) ?? undefined}
                   target="_blank"
                   rel="noreferrer"
                   className="text-brand-privacy hover:underline"
@@ -105,7 +105,7 @@ export function Footer() {
             © 2026 StrkPerks Protocol. Built for the Starknet & STRK20 Ecosystem.
           </div>
           <div className="flex items-center gap-1">
-            <span>Starknet Native Privacy Infrastructure</span>
+            <span>Starknet reward infrastructure with a documented STRK20 boundary</span>
           </div>
         </div>
       </div>

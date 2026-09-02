@@ -1,14 +1,14 @@
 import { create } from "zustand";
-import { Campaign, Conversion, ProtocolStats, TxRecord, ClaimReceipt } from "../types";
+import { Campaign, Conversion, ProtocolStats, TxRecord, ClaimReceipt } from "../../lib/types";
 import {
   INITIAL_CAMPAIGNS,
   INITIAL_CONVERSIONS,
   INITIAL_STATS,
   INITIAL_TRANSACTIONS,
-} from "../data/initialData";
-import { deriveNullifier } from "../campaign/nullifier";
-import { generatePrivateRewardNote } from "../strk20/notes";
-import { DEMO_RECIPIENT_SECRET } from "../utils/constants";
+} from "./fixtures";
+import { deriveNullifier } from "../../lib/campaign/nullifier";
+import { generatePrivateRewardNote } from "./notes";
+import { DEMO_RECIPIENT_SECRET } from "./constants";
 
 interface DemoState {
   // Protocol Data
@@ -98,6 +98,8 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     const txHash = "";
 
     const newCampaign: Campaign = {
+      source: "simulation",
+      isFixture: true,
       id: campaignId,
       name: data.name,
       description: data.description,
@@ -252,6 +254,7 @@ export const useDemoStore = create<DemoState>((set, get) => ({
 
     const receipt: ClaimReceipt = {
       isFixture: true,
+      source: "simulation",
       id: `rcpt_${Date.now()}`,
       campaignId: campaign.id,
       campaignName: campaign.name,
@@ -322,7 +325,7 @@ export const useDemoStore = create<DemoState>((set, get) => ({
     if (!get().consumedNullifiers.has(nullifier)) {
       return { error: "No prior simulated claim exists for this nullifier", nullifier, txHash: "" };
     }
-    const errorReason = `Reverted on Starknet L2: NullifierRegistry.cairo::is_nullifier_used returned true for ${nullifier.slice(0, 10)}...${nullifier.slice(-8)}. Duplicate claim rejected!`;
+    const errorReason = `Simulation: local replay model found consumed app nullifier ${nullifier.slice(0, 10)}...${nullifier.slice(-8)}. No Starknet transaction was submitted.`;
 
     const newTx: TxRecord = {
       hash: "",

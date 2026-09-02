@@ -18,16 +18,21 @@ review before any production or funded public deployment.
    package tag, Wallet API schema, fee behavior, and proving/discovery services
    from first-party Starknet resources.
 2. Run `.\scripts\verify.ps1` and retain the complete output.
-3. Set `RPC_URL`, `ACCOUNT`, `DEPLOYER_ADDRESS`, `PRIVACY_POOL_ADDRESS`, and
-   `REWARD_TOKEN_ADDRESS` in the shell. Never commit them or account secrets.
+3. Set `RPC_URL`, `ACCOUNT`, `DEPLOYER_ADDRESS`, `PRIVACY_POOL_ADDRESS`,
+   `REWARD_TOKEN_ADDRESS`, and the verified `REWARD_TOKEN_DECIMALS=18` in the
+   shell. Never commit them or account secrets.
 4. From `contracts/`, run `./run_deployment.sh` with a disposable funded testnet
-   account. The script builds current sources, deploys in dependency order,
-   performs one-time wiring, and writes `deployed_addresses.env`.
-5. Verify every class hash and address independently before copying values to
-   `apps/web/.env.local` or enabling live mode.
-6. Approve the campaign to spend the reward token, call `fund_with_erc20`, and
+   account. It refuses a dirty tree or non-Sepolia RPC, deploys through the
+   factory, and writes a pending JSON manifest under `deployments/sepolia/`.
+5. Run `RPC_URL=... ./verify_deployment.sh ../deployments/sepolia/<manifest>.json`.
+   The verifier rebuilds class hashes, checks receipts and wiring, and only then
+   marks the manifest `verified`.
+6. Run `node scripts/validate-deployment-manifest.mjs <manifest>` and export the
+   public web values with `node scripts/export-web-env.mjs <manifest>`. Put the
+   output in untracked `apps/web/.env.local`; never redirect secrets into it.
+7. Approve the campaign to spend the reward token, call `fund_with_erc20`, and
    record the real transaction.
-7. Execute a real prepare/approve/submit/discover claim, an altered-note attempt,
+8. Execute a real prepare/approve/submit/discover claim, an altered-note attempt,
    and a replay attempt. Record explorer evidence.
 
 Rotate any RPC credential that appeared in an earlier committed deployment

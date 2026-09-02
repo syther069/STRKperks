@@ -34,5 +34,6 @@ export async function executeContractCalls(
   const result = await wallet.execute(calls);
   const hash = result.transaction_hash || result.hash;
   if (!hash) throw new Error("Wallet returned no transaction hash");
+  if (!/^0x[0-9a-f]{1,64}$/i.test(hash) || BigInt(hash) === 0n) throw new Error("Wallet returned an invalid Starknet transaction hash");
   return hash;
 }

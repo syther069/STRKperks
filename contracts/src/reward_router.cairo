@@ -13,6 +13,7 @@ pub trait IRewardRouter<TContractState> {
     ) -> Span<OpenNoteDeposit>;
     fn get_pool(self: @TContractState) -> ContractAddress;
     fn get_campaign(self: @TContractState) -> ContractAddress;
+    fn get_reward_token(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::contract]
@@ -90,6 +91,10 @@ mod RewardRouter {
 
         fn get_campaign(self: @ContractState) -> ContractAddress {
             self.campaign.read()
+        }
+
+        fn get_reward_token(self: @ContractState) -> ContractAddress {
+            self.reward_token.read()
         }
     }
 }

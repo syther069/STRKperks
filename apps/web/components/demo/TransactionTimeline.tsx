@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useDemoStore } from "../../lib/store/demoStore";
+import { useDemoStore } from "../../features/demo/store";
 import { TxRecord } from "../../lib/types";
 import { Card } from "../ui/Card";
 import { StatusBadge } from "../ui/Badge";

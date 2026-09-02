@@ -8,3 +8,11 @@ export function parseTokenAmount(value: string, decimals = 18): string {
   for (let i = 0; i < decimals; i += 1) scale *= BigInt(10);
   return (BigInt(whole) * scale + BigInt((fraction + "0".repeat(decimals)).slice(0, decimals))).toString();
 }
+
+export function formatTokenAmount(value: string | bigint, decimals = 18): string {
+  const amount = BigInt(value);
+  const scale = 10n ** BigInt(decimals);
+  const whole = amount / scale;
+  const fraction = (amount % scale).toString().padStart(decimals, "0").replace(/0+$/, "");
+  return fraction ? `${whole}.${fraction}` : whole.toString();
+}

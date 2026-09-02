@@ -1,11 +1,16 @@
 import { deriveNullifier, deriveRecipientCommitment, toFelt } from "../lib/campaign/nullifier";
-import { generatePrivateRewardNote } from "../lib/strk20/notes";
+import { generatePrivateRewardNote } from "../features/demo/notes";
 import { buildPrivateClaimActions, extractPreparedOpenNoteId } from "../lib/strk20/walletActions";
 import { campaignFormSchema } from "../lib/validation/campaignSchema";
 import { parseTokenAmount } from "../lib/starknet/amounts";
+import { buildErc20FundCall } from "../lib/starknet/contracts";
+import { getExplorerTxUrl } from "../lib/starknet/explorer";
+import fs from "node:fs";
+import path from "node:path";
 
 // Simple standalone assertion test suite that can be run directly via node / tsx or vitest
 async function runTests() {
+  const webRoot = path.resolve(__dirname, "..");
   console.log("Starting StrkPerks Protocol Tests...\n");
 
   // Test 1: Deterministic Nullifier Generation
@@ -138,7 +143,35 @@ async function runTests() {
   if (!rejectedAmbiguous) throw new Error("FAIL: Ambiguous note IDs must fail closed");
   console.log("✓ Test 9 Passed: Prepared note binding fails closed on ambiguity.");
 
-  console.log("\nAll 9 StrkPerks Protocol Checks Passed Successfully!");
+  if (getExplorerTxUrl("tx_demo_123") !== null || !getExplorerTxUrl("0x123")) {
+    throw new Error("FAIL: Explorer links must reject synthetic hashes and accept felt hashes");
+  }
+  console.log("✓ Test 10 Passed: Synthetic explorer evidence is rejected.");
+
+  const fund = buildErc20FundCall("0x456", "100");
+  const actionsSource = fs.readFileSync(path.join(webRoot, "lib/starknet/useContractActions.ts"), "utf8");
+  if (fund.entrypoint !== "fund_with_erc20" || !/buildErc20ApproveCall[\s\S]+await execute\("approve_reward_token"[\s\S]+await execute\("fund_campaign"/.test(actionsSource)) {
+    throw new Error("FAIL: Public funding must confirm approval before funding");
+  }
+  if (!/createCampaign:[\s\S]+buildFactoryCreateCall/.test(actionsSource)) throw new Error("FAIL: Campaign creation must target the live factory");
+  console.log("✓ Test 11 Passed: Production creation and funding calls target live entrypoints.");
+
+  const productionRoots = ["app", "components", "hooks", "lib"].map((root) => path.join(webRoot, root));
+  const walk = (directory: string): string[] => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      if (absolute.endsWith(path.join("app", "demo")) || absolute.endsWith(path.join("components", "demo"))) return [];
+      return walk(absolute);
+    }
+    return /\.(ts|tsx)$/.test(entry.name) ? [absolute] : [];
+  });
+  for (const file of productionRoots.flatMap(walk)) {
+    const source = fs.readFileSync(file, "utf8");
+    if (/features[\\/]demo|features\/demo/.test(source)) throw new Error(`FAIL: Production module imports demo feature: ${file}`);
+  }
+  console.log("✓ Test 12 Passed: Production modules do not import isolated demo state.");
+
+  console.log("\nAll 12 StrkPerks Protocol Checks Passed Successfully!");
 }
 
 runTests();

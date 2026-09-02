@@ -26,3 +26,7 @@ selective disclosure and must remain controlled by the wallet owner.
 
 Product language should say **private by default and selectively disclosable**,
 not anonymous, invisible, or untraceable.
+
+The current web amount parser assumes an 18-decimal reward token. Deployment
+must constrain the configured token accordingly until token metadata is read
+and formatted dynamically.

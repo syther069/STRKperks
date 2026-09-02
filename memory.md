@@ -23,6 +23,14 @@
 - Added the Cairo test matrix documenting required registry, campaign, router, and atomic-rollback cases; `snforge` execution remains pending because the Foundry archive cannot be extracted in WSL.
 - Added decimal-to-18-decimal token conversion and a client-only `useContractActions` hook that executes typed Starknet calls when a real wallet and deployed addresses are configured.
 - Corrected the demo claim path so nullifiers are derived from the recipient secret (not the public conversion ID), matching the documented privacy model; duplicate attempts reuse the same local secret.
-# Current audit note
+# 2026-09-02 hardening update
 
-The repository now contains 24 Starknet Foundry tests. Live deployment and STRK20 wallet execution remain external launch gates; do not describe fixture hashes or local demo state as onchain evidence.
+- Production routes now read factory-indexed campaign state from a Sepolia-validated RPC and never fall back to fixtures.
+- Demo fixtures, notes, and Zustand state are isolated under `apps/web/features/demo`; ESLint and standalone checks enforce the boundary.
+- Factory creation now atomically deploys and wires campaign/router pairs and transfers campaign ownership to the caller.
+- Public writes persist wallet-returned hashes, recover timed-out receipts through `/activity`, and invalidate live Starknet queries after acceptance.
+- Funding confirms ERC-20 approval before transfer, supports allowance cancellation, and provides owner-only lifecycle/unspent-fund recovery controls.
+- The STRK20 Wallet API adapter checks version `0.10.3+`, binds the exact prepared open-note ID, fails closed on changes, records a pre-claim balance baseline only with consent, and distinguishes receipt, wallet-balance, and replay evidence.
+- Deployment tooling emits a pending JSON manifest and independently verifies source class hashes, transaction receipts, constructor/wiring state, and an 18-decimal reward token before web environment export.
+- 43 Starknet Foundry tests pass locally with Scarb/Cairo 2.20.1 and Starknet Foundry 0.63.0. Frontend typecheck, lint, standalone checks, and production build pass.
+- No current deployment, accepted STRK20 claim, wallet note/balance evidence, or live replay rejection was produced. Those remain external gates, and the router remains unaudited.

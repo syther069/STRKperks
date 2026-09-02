@@ -30,10 +30,17 @@ export const CONTRACT_ADDRESSES = {
 export const LIVE_CONTRACTS_ENABLED =
   LIVE_CONTRACTS_REQUESTED &&
   APP_CONFIG.network === "sepolia" &&
-  Object.values(CONTRACT_ADDRESSES).every((value) => isAddress(value));
+  [
+    CONTRACT_ADDRESSES.campaignFactory,
+    CONTRACT_ADDRESSES.nullifierRegistry,
+    CONTRACT_ADDRESSES.strkToken,
+    CONTRACT_ADDRESSES.privacyPool,
+  ].every((value) => isAddress(value));
 
 export const LIVE_CONTRACTS_CONFIGURED = LIVE_CONTRACTS_ENABLED;
 
-export const DEMO_CAMPAIGN_ID = "camp_demo_1";
-export const DEMO_RECIPIENT_SECRET = "priv_rcpt_sec_99481ad7f309a";
-export const DEMO_CONVERSION_ID = "conv_demo_referral_771";
+/**
+ * Production pages never fall back to demo state. This flag only reports
+ * whether the public, build-time deployment configuration is complete.
+ */
+export const PRODUCTION_CONFIG_READY = LIVE_CONTRACTS_ENABLED;

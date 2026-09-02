@@ -10,9 +10,10 @@
 | Wrong helper output | Balance-delta accounting, checked `u256 -> u128`, zero rejection, exact pool approval |
 | Expired or disabled campaign | Start/end, expiry, pause, close, budget, and claim-limit guards |
 | Key leakage | Wallet owns keys/proofs; frontend never requests a viewing key |
-| Fabricated live receipt | Live flow uses only wallet-returned hash and prepared open-note ID |
+| Fabricated live receipt | Wallet hashes are felt-validated, receipts are polled/recovered, state is refreshed, and explorer links reject synthetic values |
+| Demo-state leakage | Fixtures/store live under `features/demo`; lint and tests block production imports |
 
 Residual risks include unaudited Cairo, wallet/prover/discovery correctness,
 malicious or non-standard ERC-20 behavior, metadata correlation, transaction
-timeouts, and changes in upstream deployments or schemas. This repository is
+timeouts, low-entropy app secrets, and changes in upstream deployments or schemas. This repository is
 not a security audit.

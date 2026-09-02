@@ -13,11 +13,11 @@ export function Card({
 }: CardProps) {
   const variantStyles = {
     default: "bg-bg-surface border border-border",
-    raised: "bg-bg-raised border border-border shadow-md",
+    raised: "bg-bg-raised border border-border",
     shielded:
-      "bg-gradient-to-b from-brand-privacy-subtle/40 to-bg-surface border border-brand-privacy/30",
+      "bg-bg-surface border border-brand-privacy/30",
     interactive:
-      "bg-bg-surface border border-border hover:border-border-hover hover:bg-bg-raised/60 transition-all cursor-pointer",
+      "bg-bg-surface border border-border hover:border-border-hover hover:bg-bg-raised/60 transition-colors duration-200 cursor-pointer",
   };
 
   return (

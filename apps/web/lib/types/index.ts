@@ -20,7 +20,9 @@ export interface Campaign {
   isShielded: boolean;
   /** True when the record is local demo data and not chain state. */
   isFixture?: boolean;
+  source?: "starknet" | "simulation";
   contractAddress?: string;
+  routerAddress?: string;
   createdAt: number;
 }
 
@@ -40,6 +42,7 @@ export interface Conversion {
   claimTxHash?: string;
   /** True when the record is local demo data and not chain state. */
   isFixture?: boolean;
+  source?: "starknet" | "simulation";
 }
 
 export interface ClaimReceipt {
@@ -58,6 +61,7 @@ export interface ClaimReceipt {
   shieldedBalanceVerified: boolean;
   /** True when the receipt is local demo data and not chain evidence. */
   isFixture?: boolean;
+  source?: "starknet" | "simulation";
 }
 
 export type TxType =
@@ -81,6 +85,29 @@ export interface TxRecord {
   contractAddress?: string;
   /** True when the record is local demo data and not chain state. */
   isFixture?: boolean;
+  source?: "starknet" | "simulation";
+}
+
+export type PublicTransactionStatus =
+  | "awaiting_wallet"
+  | "submitted"
+  | "pending"
+  | "accepted"
+  | "reverted"
+  | "rejected"
+  | "unknown";
+
+export interface PublicTransactionRecord {
+  id: string;
+  chainId: string;
+  account: string;
+  action: string;
+  target: string;
+  hash?: string;
+  status: PublicTransactionStatus;
+  submittedAt: number;
+  updatedAt: number;
+  error?: string;
 }
 
 export interface ProtocolStats {

@@ -105,16 +105,16 @@ export async function submitPrivateClaim(
   }
   const result = await account.strk20InvokeTransaction(checked.actions);
   if (!result.transaction_hash) throw new Error("Privacy wallet returned no transaction hash");
-  const waiter = (account as unknown as {
-    waitForTransaction?: (hash: string) => Promise<unknown>;
-  }).waitForTransaction;
-  if (waiter) {
-    await Promise.race([
-      waiter.call(account, result.transaction_hash),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Transaction confirmation timed out; keep the hash and retry status polling")), 120_000),
-      ),
-    ]);
+  if (!/^0x[0-9a-f]{1,64}$/i.test(result.transaction_hash) || BigInt(result.transaction_hash) === 0n) {
+    throw new Error("Privacy wallet returned an invalid Starknet transaction hash");
   }
   return { transactionHash: result.transaction_hash, noteId: checked.noteId };
+}
+
+/** Deliberate, consent-gated wallet balance read. This never exposes viewing keys. */
+export async function readShieldedTokenBalance(account: WalletAccountV6, token: string): Promise<string> {
+  const balances = await account.strk20Balances([token]);
+  const match = balances.find((entry) => feltEquals(entry.token, token));
+  if (!match) throw new Error("Privacy wallet returned no balance entry for the reward token");
+  return String(match.balance);
 }

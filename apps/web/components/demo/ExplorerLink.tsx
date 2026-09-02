@@ -13,6 +13,7 @@ export interface ExplorerLinkProps {
 export function ExplorerLink({ type, value, label, className }: ExplorerLinkProps) {
   if (!value) return null;
   const url = type === "tx" ? getExplorerTxUrl(value) : getExplorerContractUrl(value);
+  if (!url) return null;
   const display = label || (type === "tx" ? shortenHash(value, 6) : shortenAddress(value, 4));
 
   return (

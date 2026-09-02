@@ -21,10 +21,10 @@ export default function CreateCampaignPage() {
 
       <div className="pb-4 border-b border-border">
         <h1 className="text-2xl font-bold text-fg-primary tracking-tight">
-          Create Private Rewards Campaign
+          Create Starknet Reward Campaign
         </h1>
         <p className="text-xs text-fg-secondary mt-1">
-          Deploy a privacy-preserving referral and contributor reward contract instance on Starknet.
+          Deploy a public campaign and its STRK20 settlement router through the verified factory.
         </p>
       </div>
 

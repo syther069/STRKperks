@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useDemoStore } from "../../lib/store/demoStore";
+import { useDemoStore } from "../../features/demo/store";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
 import { CheckCircle2, Circle, ArrowRight, RotateCcw, ShieldCheck, ShieldAlert, Sparkles } from "lucide-react";

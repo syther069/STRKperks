@@ -26,7 +26,7 @@ fn deploy_registry() -> INullifierRegistryDispatcher {
 fn deploy_token() -> ITestTokenDispatcher {
     let class = declare("TestToken").unwrap().contract_class();
     let owner: felt252 = owner_addr().into();
-    let (addr, _) = class.deploy(@array![owner, 10_000, 0]).unwrap();
+    let (addr, _) = class.deploy(@array![owner, 10_000, 0, 0]).unwrap();
     ITestTokenDispatcher { contract_address: addr }
 }
 
@@ -174,4 +174,38 @@ fn test_same_conversion_cannot_fund_a_second_note_with_new_nullifier() {
     router.privacy_invoke(0xA, 0xD, 0xE, 900);
     stop_cheat_caller_address(router.contract_address);
     stop_cheat_block_timestamp(campaign.contract_address);
+}
+
+#[test]
+#[should_panic(expected: 'ZERO_REWARD_AMOUNT')]
+fn test_zero_output_reverts() {
+    let registry = deploy_registry();
+    let token = deploy_token();
+    let campaign = deploy_campaign(token.contract_address, registry.contract_address);
+    let router = deploy_router(campaign.contract_address, token.contract_address);
+    configure_and_fund(token, campaign, router);
+    token.set_noop_transfers(true);
+    start_cheat_block_timestamp(campaign.contract_address, 200);
+    start_cheat_caller_address(campaign.contract_address, owner_addr());
+    campaign.approve_claim(0xA, 0xB, 0xC, 900);
+    stop_cheat_caller_address(campaign.contract_address);
+    start_cheat_caller_address(router.contract_address, pool_addr());
+    router.privacy_invoke(0xA, 0xB, 0xC, 900);
+}
+
+#[test]
+#[should_panic(expected: 'TOKEN_APPROVE_FAILED')]
+fn test_pool_approval_failure_reverts_settlement() {
+    let registry = deploy_registry();
+    let token = deploy_token();
+    let campaign = deploy_campaign(token.contract_address, registry.contract_address);
+    let router = deploy_router(campaign.contract_address, token.contract_address);
+    configure_and_fund(token, campaign, router);
+    token.set_fail_approvals(true);
+    start_cheat_block_timestamp(campaign.contract_address, 200);
+    start_cheat_caller_address(campaign.contract_address, owner_addr());
+    campaign.approve_claim(0xA, 0xB, 0xC, 900);
+    stop_cheat_caller_address(campaign.contract_address);
+    start_cheat_caller_address(router.contract_address, pool_addr());
+    router.privacy_invoke(0xA, 0xB, 0xC, 900);
 }

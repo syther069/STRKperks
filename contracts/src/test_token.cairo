@@ -14,8 +14,11 @@ pub trait ITestToken<TContractState> {
         sender: ContractAddress,
         recipient: ContractAddress,
         amount: u256,
+    ) -> bool;
     fn set_fail_transfers(ref self: TContractState, fail: bool);
     fn set_burn_on_transfer(ref self: TContractState, burn: bool);
+    fn set_noop_transfers(ref self: TContractState, noop: bool);
+    fn set_fail_approvals(ref self: TContractState, fail: bool);
 }
 
 #[starknet::contract]
@@ -33,6 +36,8 @@ mod TestToken {
         allowances: Map<(ContractAddress, ContractAddress), u256>,
         fail_transfers: bool,
         burn_on_transfer: bool,
+        noop_transfers: bool,
+        fail_approvals: bool,
     }
 
     #[constructor]
@@ -67,6 +72,12 @@ mod TestToken {
         fn set_burn_on_transfer(ref self: ContractState, burn: bool) {
             self.burn_on_transfer.write(burn);
         }
+        fn set_noop_transfers(ref self: ContractState, noop: bool) {
+            self.noop_transfers.write(noop);
+        }
+        fn set_fail_approvals(ref self: ContractState, fail: bool) {
+            self.fail_approvals.write(fail);
+        }
         fn mint(ref self: ContractState, recipient: ContractAddress, amount: u256) {
             assert(starknet::get_caller_address() == self.owner.read(), 'NOT_AUTHORIZED');
             self.balances.entry(recipient).write(self.balances.entry(recipient).read() + amount);
@@ -83,11 +94,13 @@ mod TestToken {
         }
 
         fn approve(ref self: ContractState, spender: ContractAddress, amount: u256) -> bool {
+            if self.fail_approvals.read() { return false; }
             self.allowances.entry((starknet::get_caller_address(), spender)).write(amount);
             true
         }
 
         fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) -> bool {
+            if self.noop_transfers.read() { return true; }
             move_tokens(ref self, starknet::get_caller_address(), recipient, amount);
             true
         }
